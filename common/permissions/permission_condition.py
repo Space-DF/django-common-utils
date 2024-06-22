@@ -1,7 +1,7 @@
 import inspect
 import operator
 
-from pkg.permissions.constants import NONE_OBJECT
+from common.permissions.constants import NONE_OBJECT
 
 
 def _is_permission_factory(obj):

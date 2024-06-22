@@ -1,9 +1,8 @@
+from common.swagger.params import get_organization_header_params
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins
 from rest_framework.exceptions import ParseError
 from rest_framework.generics import GenericAPIView
-
-from pkg.swagger.params import get_organization_header_params
 
 
 class OrganizationAPIView(GenericAPIView):

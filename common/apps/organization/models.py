@@ -5,6 +5,9 @@ from django_tenants.models import DomainMixin, TenantMixin
 
 class Organization(TenantMixin, BaseModel):
     name = models.CharField(max_length=100)
+    slug_name = models.SlugField(max_length=64, unique=True)
+    is_multi_tenant = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
 
 class Domain(DomainMixin, BaseModel):

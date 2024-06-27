@@ -10,7 +10,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_new_organization_handler():
-    return import_string(getattr(settings, "NEW_ORGANIZATION_HANDLER", None))
+    handler_path = getattr(settings, "NEW_ORGANIZATION_HANDLER", None)
+    if handler_path is not None:
+        return import_string(handler_path)
+    return None
 
 
 @shared_task(name="spacedf.tasks.new_organization")

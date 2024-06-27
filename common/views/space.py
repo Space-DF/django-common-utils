@@ -17,9 +17,9 @@ class SpaceAPIView(GenericAPIView):
                 % self.__class__.__name__
             )
 
-        space_slug_name = self.request.headers.get("space", None)
+        space_slug_name = self.request.headers.get("X-Space", None)
         if space_slug_name is None:
-            raise ParseError("space is required")
+            raise ParseError("X-Space header is required")
 
         filters = {
             f"{self.space_field}__slug_name": space_slug_name,

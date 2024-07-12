@@ -17,11 +17,17 @@ def setup_synchronous_model_task_routing():
                 f"{settings.SERVICE_NAME}_update_{model_name}",
                 exchange=Exchange(f"update_{model_name}", type="fanout"),
                 routing_key=f"update_{model_name}",
+                queue_arguments={
+                    "x-queue-mode": "lazy",
+                },
             ),
             Queue(
                 f"{settings.SERVICE_NAME}_delete_{model_name}",
                 exchange=Exchange(f"delete_{model_name}", type="fanout"),
                 routing_key=f"delete_{model_name}",
+                queue_arguments={
+                    "x-queue-mode": "lazy",
+                },
             ),
         )
         update_task_name = f"spacedf.tasks.update_{model_name}"
@@ -46,12 +52,15 @@ def setup_organization_task_routing():
 
     celery_app.conf.task_queues = celery_app.conf.task_queues + (
         Queue(
-            "auth_new_organization",
+            f"{settings.SERVICE_NAME}_new_organization",
             exchange=Exchange("new_organization", type="fanout"),
             routing_key="new_organization",
+            queue_arguments={
+                "x-queue-mode": "lazy",
+            },
         ),
     )
     celery_app.conf.task_routes["spacedf.tasks.new_organization"] = {
-        "queue": "auth_new_organization",
+        "queue": f"{settings.SERVICE_NAME}_new_organization",
         "routing_key": "new_organization",
     }

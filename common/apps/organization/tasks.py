@@ -1,7 +1,7 @@
 import logging
 
-from celery import shared_task
 from common.apps.organization.models import Domain, Organization
+from common.celery.tasks import task
 from django.conf import settings
 from django.db import transaction
 from django.utils.module_loading import import_string
@@ -16,10 +16,12 @@ def get_new_organization_handler():
     return None
 
 
-@shared_task(name="spacedf.tasks.new_organization")
-@transaction.atomic()
-def create_organization(id, name, slug_name, is_active, owner):
-    logger.info(f"create_organization({id}, {name}, {slug_name}, {is_active}, {owner})")
+@task(name="spacedf.tasks.new_organization", max_retries=3)
+@transaction.atomic
+def create_organization(id, name, slug_name, is_active, owner, created_at, updated_at):
+    logger.info(
+        f"create_organization({id}, {name}, {slug_name}, {is_active}, {owner}, {created_at}, {updated_at})"
+    )
 
     organization = Organization(
         schema_name=slug_name,
@@ -27,6 +29,8 @@ def create_organization(id, name, slug_name, is_active, owner):
         name=name,
         slug_name=slug_name,
         is_active=is_active,
+        created_at=created_at,
+        updated_at=updated_at,
     )
     organization.save()
     Domain(

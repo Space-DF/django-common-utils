@@ -1,7 +1,7 @@
+from common.celery.tasks import send_task
+from common.utils.model_to_dict import model_to_dict
 from django.conf import settings
 from django.db import connection, models
-from django.forms import model_to_dict
-from django.utils.module_loading import import_string
 
 
 class SynchronousTenantModel(models.Model):
@@ -31,13 +31,9 @@ class SynchronousTenantModel(models.Model):
         else:
             synchronous_fields = [field.name for field in self._meta.get_fields()]
 
-        celery_app = import_string(settings.CELERY_APP)
-
-        celery_app.send_task(
-            name=f"spacedf.tasks.update_{self._meta.model_name}",
-            exchange=f"update_{self._meta.model_name}",
-            routing_key=f"spacedf.tasks.update_{self._meta.model_name}",
-            kwargs={
+        send_task(
+            name=f"update_{self._meta.model_name}",
+            message={
                 "organization_slug_name": connection.get_tenant().slug_name,
                 "data": {
                     key: value
@@ -60,13 +56,9 @@ class SynchronousTenantModel(models.Model):
         return result
 
     def send_synchronous_delete_message(self, pk):
-        celery_app = import_string(settings.CELERY_APP)
-
-        celery_app.send_task(
-            name=f"spacedf.tasks.delete_{self._meta.model_name}",
-            exchange=f"delete_{self._meta.model_name}",
-            routing_key=f"spacedf.tasks.delete_{self._meta.model_name}",
-            kwargs={
+        send_task(
+            name=f"delete_{self._meta.model_name}",
+            message={
                 "organization_slug_name": connection.get_tenant().slug_name,
                 "pk": pk,
             },

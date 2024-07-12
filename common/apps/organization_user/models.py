@@ -59,4 +59,5 @@ class OrganizationUser(AbstractUser, SynchronousTenantModel):
         "first_name",
         "last_name",
         "email",
+        "is_owner",
     ]

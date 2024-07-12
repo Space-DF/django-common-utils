@@ -8,7 +8,8 @@ class SpaceAdmin(admin.ModelAdmin):
         "id",
         "name",
         "logo",
-        "is_multi_tenant",
+        "slug_name",
+        "created_by",
         "created_at",
         "updated_at",
     )

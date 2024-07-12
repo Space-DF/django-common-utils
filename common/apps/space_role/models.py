@@ -2,11 +2,12 @@ from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
 from common.apps.space_role.constants import SpacePermission
 from common.models.base_model import BaseModel
+from common.models.synchronous_model import SynchronousTenantModel
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 
-class SpacePolicy(BaseModel):
+class SpacePolicy(BaseModel, SynchronousTenantModel):
     name = models.CharField(max_length=256)
     description = models.TextField()
     tags = ArrayField(models.CharField(max_length=256))
@@ -15,7 +16,7 @@ class SpacePolicy(BaseModel):
     )
 
 
-class SpaceRole(BaseModel):
+class SpaceRole(BaseModel, SynchronousTenantModel):
     name = models.CharField(max_length=256)
     space = models.ForeignKey(
         Space, related_name="space_role", on_delete=models.CASCADE
@@ -23,7 +24,7 @@ class SpaceRole(BaseModel):
     policies = models.ManyToManyField(SpacePolicy)
 
 
-class SpaceRoleUser(BaseModel):
+class SpaceRoleUser(BaseModel, SynchronousTenantModel):
     space_role = models.ForeignKey(
         SpaceRole,
         related_name="space_role_user",

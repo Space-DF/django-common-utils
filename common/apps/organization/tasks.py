@@ -18,7 +18,9 @@ def get_new_organization_handler():
 
 @shared_task(name="spacedf.tasks.new_organization")
 @transaction.atomic()
-def create_organization_service(id, name, slug_name, is_active, owner):
+def create_organization(id, name, slug_name, is_active, owner):
+    logger.info(f"create_organization({id}, {name}, {slug_name}, {is_active}, {owner})")
+
     organization = Organization(
         schema_name=slug_name,
         id=id,

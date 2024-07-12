@@ -1,3 +1,4 @@
+from common.models.synchronous_model import SynchronousTenantModel
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -41,7 +42,7 @@ class UserManager(BaseUserManager):
         return self.get(**{"email__iexact": username})
 
 
-class OrganizationUser(AbstractUser):
+class OrganizationUser(AbstractUser, SynchronousTenantModel):
     """User model."""
 
     username = None
@@ -52,3 +53,10 @@ class OrganizationUser(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = UserManager()
+
+    synchronous_fields = [
+        "id",
+        "first_name",
+        "last_name",
+        "email",
+    ]

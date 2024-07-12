@@ -1,11 +1,12 @@
 from common.apps.organization_role.constants import OrganizationPermission
 from common.apps.organization_user.models import OrganizationUser
 from common.models.base_model import BaseModel
+from common.models.synchronous_model import SynchronousTenantModel
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 
-class OrganizationPolicy(BaseModel):
+class OrganizationPolicy(BaseModel, SynchronousTenantModel):
     name = models.CharField(max_length=256)
     description = models.TextField()
     tags = ArrayField(models.CharField(max_length=256))
@@ -14,12 +15,12 @@ class OrganizationPolicy(BaseModel):
     )
 
 
-class OrganizationRole(BaseModel):
+class OrganizationRole(BaseModel, SynchronousTenantModel):
     name = models.CharField(max_length=256)
     policies = models.ManyToManyField(OrganizationPolicy)
 
 
-class OrganizationRoleUser(BaseModel):
+class OrganizationRoleUser(BaseModel, SynchronousTenantModel):
     organization_role = models.ForeignKey(
         OrganizationRole,
         related_name="organization_role_user",

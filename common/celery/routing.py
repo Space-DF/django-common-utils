@@ -18,7 +18,7 @@ def setup_synchronous_model_task_routing():
                 exchange=Exchange(f"update_{model_name}", type="fanout"),
                 routing_key=f"update_{model_name}",
                 queue_arguments={
-                    "x-queue-mode": "lazy",
+                    "x-single-active-consumer": True,
                 },
             ),
             Queue(
@@ -26,7 +26,7 @@ def setup_synchronous_model_task_routing():
                 exchange=Exchange(f"delete_{model_name}", type="fanout"),
                 routing_key=f"delete_{model_name}",
                 queue_arguments={
-                    "x-queue-mode": "lazy",
+                    "x-single-active-consumer": True,
                 },
             ),
         )
@@ -56,7 +56,7 @@ def setup_organization_task_routing():
             exchange=Exchange("new_organization", type="fanout"),
             routing_key="new_organization",
             queue_arguments={
-                "x-queue-mode": "lazy",
+                "x-single-active-consumer": True,
             },
         ),
     )

@@ -10,6 +10,10 @@ logger = logging.getLogger(__name__)
 
 
 def task(max_retries=3, bind=False, task_acks_late=True, prefetch_count=1, **option):
+    """
+    Use as a decorator for the Celery shared_task
+    """
+
     def create_shared_task(handler):
         @shared_task(
             max_retries=max_retries,

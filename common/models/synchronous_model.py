@@ -1,4 +1,4 @@
-from common.celery.tasks import send_task
+from common.celery.task_senders import send_task
 from common.utils.model_to_dict import model_to_dict
 from django.conf import settings
 from django.db import connection, models

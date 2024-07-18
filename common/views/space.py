@@ -1,3 +1,4 @@
+from common.apps.space.models import Space
 from common.swagger.params import get_space_header_params
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins
@@ -28,11 +29,21 @@ class SpaceAPIView(GenericAPIView):
 
         return queryset.filter(**filters)
 
+    def create_with_space(self, serializer):
+        if "__" not in self.space_field:
+            space = Space.objects.get(slug_name=self.request.headers.get("X-Space"))
+            return serializer.save(**{self.space_field: space})
+
+        return serializer.save()
+
 
 class SpaceCreateAPIView(mixins.CreateModelMixin, SpaceAPIView):
     """
     Concrete view for creating a model instance of space.
     """
+
+    def perform_create(self, serializer):
+        self.create_with_space(serializer)
 
     @swagger_auto_schema(manual_parameters=get_space_header_params())
     def post(self, request, *args, **kwargs):
@@ -89,6 +100,9 @@ class SpaceListCreateAPIView(
     """
     Concrete view for listing a queryset or creating a model instance of space.
     """
+
+    def perform_create(self, serializer):
+        self.create_with_space(serializer)
 
     @swagger_auto_schema(manual_parameters=get_space_header_params())
     def get(self, request, *args, **kwargs):

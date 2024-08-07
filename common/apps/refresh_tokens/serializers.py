@@ -1,12 +1,17 @@
+import logging
+
 from common.apps.refresh_tokens.models import (
     RefreshToken,
     RefreshTokenFamilyStatus,
     RefreshTokenStatus,
 )
 from common.apps.refresh_tokens.services import create_refresh_token
+from common.utils.social_provider import SocialProvider
 from django.conf import settings
+from django.contrib.auth import authenticate, get_user_model
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
+from rest_framework import exceptions
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import (
     TokenObtainPairSerializer,
@@ -15,13 +20,35 @@ from rest_framework_simplejwt.serializers import (
 from rest_framework_simplejwt.settings import api_settings
 
 JWTRefreshToken = import_string(settings.REFRESH_TOKEN_CLASS)
+User = get_user_model()
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     token_class = JWTRefreshToken
 
+    def authenticate(self, email: str, password: str):
+        self.user = None
+        try:
+            self.user = User.objects.get(
+                email=email, providers__contains=[SocialProvider.NONE_PROVIDER]
+            )
+        except User.DoesNotExist as e:
+            logging.exception(e)
+        if self.user:
+            authenticate_kwargs = {
+                self.username_field: email,
+                "password": password,
+            }
+            self.user = authenticate(**authenticate_kwargs)
+
     def validate(self, attrs):
-        data = super().validate(attrs)
+        data = {}
+        self.authenticate(email=attrs["email"], password=attrs["password"])
+        if not self.user:
+            raise exceptions.AuthenticationFailed(
+                self.error_messages["no_active_account"],
+                "no_active_account",
+            )
 
         refresh_token, access_token = create_refresh_token(self.user)
 

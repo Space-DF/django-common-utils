@@ -1,6 +1,8 @@
 from common.models.synchronous_model import SynchronousTenantModel
+from common.utils.social_provider import SocialProvider
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -47,6 +49,10 @@ class OrganizationUser(AbstractUser, SynchronousTenantModel):
 
     username = None
     email = models.EmailField(_("email address"), unique=True)
+    providers = ArrayField(
+        models.CharField(max_length=256, choices=SocialProvider.choices, null=True),
+        default=[SocialProvider.NONE_PROVIDER],
+    )
     is_owner = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"

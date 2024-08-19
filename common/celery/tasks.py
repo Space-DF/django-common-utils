@@ -64,21 +64,23 @@ def create_tenant_model_shared_tasks(Model):
 
     @tenant_shared_task(name=f"spacedf.tasks.update_{Model._meta.model_name}")
     def update(data):
+        cloned_data = data.copy()
+
         many_to_many_fields = {}
         for field in Model._meta.get_fields():
-            if isinstance(field, models.ForeignKey) and field.name in data:
+            if isinstance(field, models.ForeignKey) and field.name in cloned_data:
                 key = f"{field.name}_id"
-                value = data.pop(field.name, None)
-                data[key] = value
-            if isinstance(field, models.ManyToManyField) and field.name in data:
-                value = data.pop(field.name, None)
+                value = cloned_data.pop(field.name, None)
+                cloned_data[key] = value
+            if isinstance(field, models.ManyToManyField) and field.name in cloned_data:
+                value = cloned_data.pop(field.name, None)
                 many_to_many_fields[field.name] = value
         try:
-            obj = Model.objects.get(id=data["id"])
-            for attr, value in data.items():
+            obj = Model.objects.get(id=cloned_data["id"])
+            for attr, value in cloned_data.items():
                 setattr(obj, attr, value)
         except Model.DoesNotExist:
-            obj = Model(**data)
+            obj = Model(**cloned_data)
 
         for field, value in many_to_many_fields.items():
             getattr(obj, field).set(value)

@@ -58,6 +58,27 @@ default_policies = [
             SpacePermission.REMOVE_SPACE_MEMBER,
         ],
     },
+    {
+        "name": "Dashboard read-only access",
+        "description": "Provide read only access to Dashboard services",
+        "tags": ["dashboard", "read-only"],
+        "permissions": [
+            SpacePermission.READ_DASHBOARD,
+            SpacePermission.READ_DEVICE_STATE,
+        ],
+    },
+    {
+        "name": "Dashboard full access",
+        "description": "Grants full access to Dashboard resources and access to related services",
+        "tags": ["dashboard", "full-access"],
+        "permissions": [
+            SpacePermission.READ_DASHBOARD,
+            SpacePermission.CREATE_DASHBOARD,
+            SpacePermission.UPDATE_DASHBOARD,
+            SpacePermission.DELETE_DASHBOARD,
+            SpacePermission.READ_DEVICE_STATE,
+        ],
+    },
 ]
 
 

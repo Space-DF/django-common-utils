@@ -12,6 +12,9 @@ class SpaceAPIView(GenericAPIView):
     def get_queryset(self):
         queryset = super().get_queryset()
 
+        if getattr(self, "swagger_fake_view", False):
+            return queryset
+
         if self.space_field is None:
             raise Exception(
                 "'%s' should either include a `space_field` attribute, or override the `get_queryset()` method."

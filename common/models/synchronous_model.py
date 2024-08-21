@@ -30,7 +30,6 @@ class SynchronousTenantModel(models.Model):
             synchronous_fields = self.synchronous_fields
         else:
             synchronous_fields = [field.name for field in self._meta.get_fields()]
-
         send_task(
             name=f"update_{self._meta.model_name}",
             message={

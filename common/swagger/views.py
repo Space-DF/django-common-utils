@@ -1,3 +1,4 @@
+from django.conf import settings
 from drf_yasg.renderers import _SpecRenderer
 from drf_yasg.views import get_schema_view
 from rest_framework import exceptions
@@ -29,7 +30,9 @@ def get_tenant_schema_view(
 
     class TenantSchemaView(SchemaView):
         def get(self, request, version="", format=None):
-            url = "{0}://{1}{2}".format(request.scheme, request.get_host(), path)
+            url = "{0}://{1}{2}".format(
+                settings.HOST.split(":")[0], request.get_host(), path
+            )
             version = request.version or version or ""
             if isinstance(request.accepted_renderer, _SpecRenderer):
                 generator = self.generator_class(info, version, url, patterns, urlconf)

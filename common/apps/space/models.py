@@ -1,7 +1,8 @@
+from django.db import models
+
 from common.apps.organization_user.models import OrganizationUser
 from common.models.base_model import BaseModel
 from common.models.synchronous_model import SynchronousTenantModel
-from django.db import models
 
 
 class Space(BaseModel, SynchronousTenantModel):

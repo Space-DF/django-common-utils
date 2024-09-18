@@ -1,0 +1,7 @@
+AUTH_SERVICE_PROCESSING_QUEUE = "auth_service_processing_queue"
+AUTH_SERVICE_PROCESSING_TASK = "auth_service_processing"
+AUTH_SERVICE_OAUTH_CREDENTIALS_TYPE = "auth_service_oauth_credentials"
+
+CONSOLE_SERVICE_PROCESSING_QUEUE = "console_service_processing_queue"
+CONSOLE_SERVICE_PROCESSING_TASK = "console_service_processing"
+CONSOLE_SERVICE_AUTHORIZATED_USER = "console_service_authorizated_user"

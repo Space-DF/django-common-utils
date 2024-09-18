@@ -1,10 +1,11 @@
 import logging
 
-from common.apps.organization.models import Domain, Organization
-from common.celery.tasks import task
 from django.conf import settings
 from django.db import transaction
 from django.utils.module_loading import import_string
+
+from common.apps.organization.models import Domain, Organization
+from common.celery.tasks import task
 
 logger = logging.getLogger(__name__)
 

@@ -1,12 +1,5 @@
 import logging
 
-from common.apps.refresh_tokens.models import (
-    RefreshToken,
-    RefreshTokenFamilyStatus,
-    RefreshTokenStatus,
-)
-from common.apps.refresh_tokens.services import create_refresh_token
-from common.utils.social_provider import SocialProvider
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.utils.module_loading import import_string
@@ -18,6 +11,14 @@ from rest_framework_simplejwt.serializers import (
     TokenRefreshSerializer,
 )
 from rest_framework_simplejwt.settings import api_settings
+
+from common.apps.refresh_tokens.models import (
+    RefreshToken,
+    RefreshTokenFamilyStatus,
+    RefreshTokenStatus,
+)
+from common.apps.refresh_tokens.services import create_refresh_token
+from common.utils.social_provider import SocialProvider
 
 JWTRefreshToken = import_string(settings.REFRESH_TOKEN_CLASS)
 User = get_user_model()

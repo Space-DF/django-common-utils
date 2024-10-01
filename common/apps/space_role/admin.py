@@ -1,5 +1,6 @@
-from common.apps.space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
 from django.contrib import admin
+
+from common.apps.space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
 
 
 @admin.register(SpacePolicy)

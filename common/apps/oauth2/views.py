@@ -1,12 +1,13 @@
 import logging
 from operator import itemgetter
 
-from common.apps.oauth2.serializers import OauthLoginSerializer
-from common.utils.oauth2 import get_access_token, handle_access_token
 from rest_framework import generics, status
 from rest_framework.exceptions import ParseError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+
+from common.apps.oauth2.serializers import OauthLoginSerializer
+from common.utils.oauth2 import get_access_token, handle_access_token
 
 
 class GoogleLoginView(generics.CreateAPIView):

@@ -3,11 +3,12 @@ from operator import itemgetter
 from typing import Literal
 
 import requests
-from common.apps.refresh_tokens.services import create_refresh_token
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.response import Response
+
+from common.apps.refresh_tokens.services import create_refresh_token
 
 User = get_user_model()
 

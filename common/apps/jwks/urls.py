@@ -1,5 +1,6 @@
-from common.apps.jwks.views import JWKView
 from django.urls import path
+
+from common.apps.jwks.views import JWKView
 
 app_name = "jwks"
 

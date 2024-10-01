@@ -1,5 +1,6 @@
-from common.apps.space.models import Space
 from django.contrib import admin
+
+from common.apps.space.models import Space
 
 
 @admin.register(Space)

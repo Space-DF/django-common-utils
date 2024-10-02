@@ -31,7 +31,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         self.user = None
         try:
             self.user = User.objects.get(
-                email=email, providers__contains=[SocialProvider.NONE_PROVIDER]
+                email__icontains=email,
+                providers__contains=[SocialProvider.NONE_PROVIDER],
             )
         except User.DoesNotExist as e:
             logging.exception(e)

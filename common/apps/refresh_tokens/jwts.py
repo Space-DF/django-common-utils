@@ -1,7 +1,11 @@
 import jwt
+from django.db import connection
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.backends import TokenBackend
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+
+from common.utils.subdomain import extract_subdomain
 
 
 class CustomTokenBackend(TokenBackend):
@@ -14,7 +18,6 @@ class CustomTokenBackend(TokenBackend):
             jwt_payload["aud"] = self.audience
         if self.issuer is not None:
             jwt_payload["iss"] = self.issuer
-
         token = jwt.encode(
             jwt_payload,
             self.signing_key,
@@ -24,6 +27,9 @@ class CustomTokenBackend(TokenBackend):
         )
 
         return token
+
+    def set_iss(self, issuer: str):
+        self.issuer = issuer
 
 
 token_backend = CustomTokenBackend(
@@ -38,7 +44,21 @@ token_backend = CustomTokenBackend(
 )
 
 
-class CustomAccessToken(AccessToken):
+class TokenVerifier:
+    def verify(self) -> None:
+        self.check_iss()
+        return super().verify()
+
+    def check_iss(self):
+        issuer = self.payload.get("iss", None)
+        if not issuer:
+            raise AuthenticationFailed("Token is not valid")
+        subdomain = extract_subdomain(issuer)
+        if not subdomain or subdomain != connection.tenant.slug_name:
+            raise AuthenticationFailed("Token is not valid")
+
+
+class CustomAccessToken(TokenVerifier, AccessToken):
     @property
     def token_backend(self):
         if self._token_backend is None:
@@ -46,7 +66,7 @@ class CustomAccessToken(AccessToken):
         return self._token_backend
 
 
-class CustomRefreshToken(RefreshToken):
+class CustomRefreshToken(TokenVerifier, RefreshToken):
     access_token_class = CustomAccessToken
 
     @property
@@ -54,3 +74,7 @@ class CustomRefreshToken(RefreshToken):
         if self._token_backend is None:
             self._token_backend = token_backend
         return self._token_backend
+
+    def set_iss(self, claim: str = "iss", issuer=None) -> None:
+        self.token_backend.set_iss(issuer=issuer)
+        self.payload[claim] = issuer

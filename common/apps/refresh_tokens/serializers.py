@@ -31,7 +31,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         self.user = None
         try:
             self.user = User.objects.get(
-                email__icontains=email,
+                email__iexact=email,
                 providers__contains=[SocialProvider.NONE_PROVIDER],
             )
         except User.DoesNotExist as e:
@@ -51,9 +51,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 self.error_messages["no_active_account"],
                 "no_active_account",
             )
-
-        refresh_token, access_token = create_refresh_token(self.user)
-
+        tenant = None
+        if hasattr(self.context["request"], "tenant"):
+            tenant = self.context["request"].tenant
+        refresh_token, access_token = create_refresh_token(self.user, issuer=tenant)
         data["refresh"] = str(refresh_token)
         data["access"] = str(access_token)
 
@@ -66,6 +67,7 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
     def validate(self, attrs):
         refresh = self.token_class(attrs["refresh"])
 
+        refresh.check_iss()
         refresh_token_obj = (
             RefreshToken.objects.filter(jti=refresh.payload[api_settings.JTI_CLAIM])
             .select_related("family")

@@ -67,7 +67,8 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
     def validate(self, attrs):
         refresh = self.token_class(attrs["refresh"])
 
-        refresh.check_iss()
+        if hasattr(self.context["request"], "tenant"):
+            refresh.check_iss()
         refresh_token_obj = (
             RefreshToken.objects.filter(jti=refresh.payload[api_settings.JTI_CLAIM])
             .select_related("family")

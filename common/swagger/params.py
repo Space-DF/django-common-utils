@@ -7,6 +7,7 @@ api_key_param = openapi.Parameter(
     type=openapi.TYPE_STRING,
     required=True,
     description="API Key for authentication",
+    default="111-xxx-222",
 )
 
 

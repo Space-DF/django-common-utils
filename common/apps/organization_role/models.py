@@ -1,10 +1,12 @@
+from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from common.apps.organization_role.constants import OrganizationPermission
-from common.apps.organization_user.models import OrganizationUser
 from common.models.base_model import BaseModel
 from common.models.synchronous_model import SynchronousTenantModel
+
+User = get_user_model()
 
 
 class OrganizationPolicy(BaseModel, SynchronousTenantModel):
@@ -28,7 +30,7 @@ class OrganizationRoleUser(BaseModel, SynchronousTenantModel):
         on_delete=models.CASCADE,
     )
     organization_user = models.ForeignKey(
-        OrganizationUser,
+        User,
         related_name="organization_role_user",
         on_delete=models.CASCADE,
     )

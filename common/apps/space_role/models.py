@@ -1,11 +1,13 @@
+from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
 from common.apps.space_role.constants import SpacePermission
 from common.models.base_model import BaseModel
 from common.models.synchronous_model import SynchronousTenantModel
+
+User = get_user_model()
 
 
 class SpacePolicy(BaseModel, SynchronousTenantModel):
@@ -32,5 +34,5 @@ class SpaceRoleUser(BaseModel, SynchronousTenantModel):
         on_delete=models.CASCADE,
     )
     organization_user = models.ForeignKey(
-        OrganizationUser, related_name="space_role_user", on_delete=models.CASCADE
+        User, related_name="space_role_user", on_delete=models.CASCADE
     )

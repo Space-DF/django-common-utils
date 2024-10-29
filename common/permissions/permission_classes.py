@@ -1,9 +1,11 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ParseError
 from rest_framework.permissions import BasePermission
 
-from common.apps.organization_role.models import OrganizationPolicy
 from common.apps.space_role.models import SpacePolicy
+
+User = get_user_model()
 
 
 def is_method(methods):
@@ -43,37 +45,18 @@ def has_space_permission_access(permission):
 
     return HasPermissionAccess
 
-
-def has_organization_permission_access(permission):
-    """
-    Allows access only to users who have specific organization permissions.
-    """
-
-    class HasPermissionAccess(BasePermission):
-        __permission = permission
-
-        def has_permission(self, request, view):
-            policies = OrganizationPolicy.objects.filter(
-                organizationrole__organization_role_user__organization_user_id=request.user.id,
-            ).distinct()
-            return self.__permission in [
-                policy_permission
-                for policy in policies
-                for policy_permission in policy.permissions
-            ]
-
-    return HasPermissionAccess
+class IsOwner(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        try:
+            user = User.objects.get(id=request.user.id)
+            return user.organization_users.is_owner
+        except User.DoesNotExist:
+            return False
+        return super().has_object_permission(request, view, obj)
 
 
 class HasAPIKey(BasePermission):
     def has_permission(self, request, view):
         spacedf_key = request.headers.get("x-api-key", None)
         # TODO: need model for this
-        return settings.ROOT_API_KEY == spacedf_key
-
-
-class HasRootAPIKey(BasePermission):
-    def has_permission(self, request, view):
-        spacedf_key = request.headers.get("x-root-api-key", None)
-
         return settings.ROOT_API_KEY == spacedf_key

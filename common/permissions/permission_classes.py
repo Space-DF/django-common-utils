@@ -45,6 +45,7 @@ def has_space_permission_access(permission):
 
     return HasPermissionAccess
 
+
 class IsOwner(BasePermission):
     def has_object_permission(self, request, view, obj):
         try:

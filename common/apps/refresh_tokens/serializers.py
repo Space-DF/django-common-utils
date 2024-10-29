@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
-from rest_framework import exceptions
+from rest_framework import exceptions, serializers
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import (
     TokenObtainPairSerializer,
@@ -104,3 +104,8 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
         data["refresh"] = str(refresh)
 
         return data
+
+
+class TokenPairSerializer(serializers.Serializer):
+    access = serializers.CharField()
+    refresh = serializers.CharField()

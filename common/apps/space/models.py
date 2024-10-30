@@ -1,8 +1,10 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 
-from common.apps.organization_user.models import OrganizationUser
 from common.models.base_model import BaseModel
 from common.models.synchronous_model import SynchronousTenantModel
+
+User = get_user_model()
 
 
 class Space(BaseModel, SynchronousTenantModel):
@@ -11,7 +13,7 @@ class Space(BaseModel, SynchronousTenantModel):
     slug_name = models.SlugField(max_length=64, unique=True)
     is_active = models.BooleanField(default=True)
     created_by = models.ForeignKey(
-        OrganizationUser,
+        User,
         related_name="created_space",
         on_delete=models.SET_NULL,
         default=None,

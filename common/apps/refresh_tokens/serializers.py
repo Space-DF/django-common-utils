@@ -24,7 +24,7 @@ JWTRefreshToken = import_string(settings.REFRESH_TOKEN_CLASS)
 User = get_user_model()
 
 
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+class BaseTokenObtainPairSerializer(TokenObtainPairSerializer):
     token_class = JWTRefreshToken
 
     def authenticate(self, email: str, password: str):

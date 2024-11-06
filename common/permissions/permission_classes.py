@@ -53,7 +53,6 @@ class IsOwner(BasePermission):
             return user.organization_users.is_owner
         except User.DoesNotExist:
             return False
-        return super().has_object_permission(request, view, obj)
 
 
 class HasAPIKey(BasePermission):

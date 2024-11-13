@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.response import Response
 
-from common.apps.refresh_tokens.services import create_refresh_token
+from common.apps.refresh_tokens.services import create_jwt_tokens
 
 User = get_user_model()
 
@@ -62,7 +62,7 @@ def handle_access_token(access_token, provider: Literal["GOOGLE"]):
         root_user.providers.append(provider.lower())
         root_user.save()
 
-    refresh, access = create_refresh_token(root_user)
+    refresh, access = create_jwt_tokens(root_user)
     return Response(
         status=status.HTTP_200_OK, data={"refresh": str(refresh), "access": str(access)}
     )

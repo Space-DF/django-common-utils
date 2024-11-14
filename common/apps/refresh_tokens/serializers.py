@@ -17,7 +17,7 @@ from common.apps.refresh_tokens.models import (
     RefreshTokenFamilyStatus,
     RefreshTokenStatus,
 )
-from common.apps.refresh_tokens.services import create_refresh_token
+from common.apps.refresh_tokens.services import create_jwt_tokens
 from common.utils.social_provider import SocialProvider
 
 JWTRefreshToken = import_string(settings.REFRESH_TOKEN_CLASS)
@@ -43,22 +43,28 @@ class BaseTokenObtainPairSerializer(TokenObtainPairSerializer):
             }
             self.user = authenticate(**authenticate_kwargs)
 
+    def get_tokens(self):
+        tenant = None
+        if hasattr(self.context["request"], "tenant"):
+            tenant = self.context["request"].tenant
+        refresh_token, access_token = create_jwt_tokens(self.user, issuer=tenant)
+
+        return refresh_token, access_token
+
+    def get_response_data(self):
+        refresh_token, access_token = self.get_tokens()
+
+        return {"refresh": str(refresh_token), "access": str(access_token)}
+
     def validate(self, attrs):
-        data = {}
         self.authenticate(email=attrs["email"], password=attrs["password"])
         if not self.user:
             raise exceptions.AuthenticationFailed(
                 self.error_messages["no_active_account"],
                 "no_active_account",
             )
-        tenant = None
-        if hasattr(self.context["request"], "tenant"):
-            tenant = self.context["request"].tenant
-        refresh_token, access_token = create_refresh_token(self.user, issuer=tenant)
-        data["refresh"] = str(refresh_token)
-        data["access"] = str(access_token)
 
-        return data
+        return self.get_response_data()
 
 
 class CustomTokenRefreshSerializer(TokenRefreshSerializer):
@@ -66,9 +72,9 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
 
     def validate(self, attrs):
         refresh = self.token_class(attrs["refresh"])
-
         if hasattr(self.context["request"], "tenant"):
             refresh.check_iss()
+
         refresh_token_obj = (
             RefreshToken.objects.filter(jti=refresh.payload[api_settings.JTI_CLAIM])
             .select_related("family")
@@ -86,7 +92,16 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
         if refresh_token_obj.family.status != RefreshTokenFamilyStatus.Active:
             raise TokenError(_("Refresh token is inactive"))
 
-        data = {"access": str(refresh.access_token)}
+        if "access_token_handler" in self.context:
+            space_slug_name = self.context["request"].headers.get("X-Space")
+            access = self.context["access_token_handler"](
+                space_slug=space_slug_name,
+                user_id=refresh.payload["user_id"],
+                access_token=refresh.access_token,
+            )
+            data = {"access": str(access)}
+        else:
+            data = {"access": str(refresh.access_token)}
 
         refresh.set_jti()
         refresh.set_exp()

@@ -60,3 +60,9 @@ class HasAPIKey(BasePermission):
         spacedf_key = request.headers.get("x-api-key", None)
         # TODO: need model for this
         return settings.ROOT_API_KEY == spacedf_key
+
+
+class HasSpaceName(BasePermission):
+    def has_permission(self, request, view):
+        space_slug_name = request.headers.get("X-Space", None)
+        return bool(space_slug_name)

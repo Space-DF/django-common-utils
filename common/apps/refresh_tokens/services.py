@@ -8,7 +8,7 @@ from common.utils.subdomain import update_subdomain
 JWTRefreshToken = import_string(settings.REFRESH_TOKEN_CLASS)
 
 
-def create_refresh_token(user, issuer=None, **kwargs):
+def create_jwt_tokens(user, issuer=None, **kwargs):
     refresh = JWTRefreshToken.for_user(user)
     if issuer:
         domain = update_subdomain(settings.HOST, issuer.slug_name)

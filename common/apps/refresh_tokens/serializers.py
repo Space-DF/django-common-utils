@@ -93,12 +93,12 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
             raise TokenError(_("Refresh token is inactive"))
 
         if "access_token_handler" in self.context:
-            space_slug_name = self.context["request"].headers.get("X-Space")
-            access = self.context["access_token_handler"](
-                space_slug=space_slug_name,
-                user_id=refresh.payload["user_id"],
-                access_token=refresh.access_token,
-            )
+            params = {
+                "access_token": refresh.access_token,
+                "user_id": refresh.payload["user_id"],
+                **self.context["access_token_handler_params"]
+            }
+            access = self.context["access_token_handler"](**params)
             data = {"access": str(access)}
         else:
             data = {"access": str(refresh.access_token)}

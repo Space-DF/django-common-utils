@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import ArrayField
@@ -48,6 +50,9 @@ class UserManager(BaseUserManager):
 class OrganizationUser(AbstractUser, SynchronousTenantModel):
     """User model."""
 
+    id = models.UUIDField(
+        default=uuid.uuid4, unique=True, primary_key=True, editable=False
+    )
     username = None
     email = models.EmailField(_("email address"), unique=True)
     providers = ArrayField(

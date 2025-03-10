@@ -15,7 +15,7 @@ def create_jwt_tokens(user, issuer=None, **kwargs):
     else:
         domain = settings.HOST
     refresh.payload["iss"] = domain
-    
+
     token_family = RefreshTokenFamily(user=user)
     token_family.save()
     RefreshToken(

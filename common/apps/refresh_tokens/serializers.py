@@ -96,7 +96,7 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
             params = {
                 "access_token": refresh.access_token,
                 "user_id": refresh.payload["user_id"],
-                **self.context["access_token_handler_params"]
+                **self.context["access_token_handler_params"],
             }
             access = self.context["access_token_handler"](**params)
             data = {"access": str(access)}

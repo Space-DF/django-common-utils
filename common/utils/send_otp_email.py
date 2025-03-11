@@ -1,4 +1,4 @@
-import random
+import secrets
 import string
 
 from django.conf import settings
@@ -10,8 +10,7 @@ OTP_EXPIRY_SECONDS = 600  # 10 minutes
 
 def generate_otp(length=6):
     """Generate a 6-digit OTP."""
-    return "".join(random.choices(string.digits, k=length))
-
+    return "".join(secrets.choice(string.digits) for _ in range(length))
 
 def send_otp_email(user_email):
     """Send OTP to user and store it in Redis."""

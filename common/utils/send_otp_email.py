@@ -12,6 +12,7 @@ def generate_otp(length=6):
     """Generate a 6-digit OTP."""
     return "".join(secrets.choice(string.digits) for _ in range(length))
 
+
 def send_otp_email(user_email):
     """Send OTP to user and store it in Redis."""
     otp_code = generate_otp()

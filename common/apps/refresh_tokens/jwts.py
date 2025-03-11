@@ -28,9 +28,6 @@ class CustomTokenBackend(TokenBackend):
 
         return token
 
-    def set_iss(self, issuer: str):
-        self.issuer = issuer
-
 
 token_backend = CustomTokenBackend(
     api_settings.ALGORITHM,
@@ -74,7 +71,3 @@ class CustomRefreshToken(TokenVerifier, RefreshToken):
         if self._token_backend is None:
             self._token_backend = token_backend
         return self._token_backend
-
-    def set_iss(self, claim: str = "iss", issuer=None) -> None:
-        self.token_backend.set_iss(issuer=issuer)
-        self.payload[claim] = issuer

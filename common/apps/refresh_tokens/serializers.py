@@ -72,7 +72,7 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
 
     def validate(self, attrs):
         refresh = self.token_class(attrs["refresh"])
-        if hasattr(self.context["request"], "tenant"):
+        if "request" in self.context and hasattr(self.context["request"], "tenant"):
             refresh.check_iss()
 
         refresh_token_obj = (

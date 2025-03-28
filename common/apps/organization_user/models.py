@@ -61,6 +61,11 @@ class OrganizationUser(AbstractUser, SynchronousTenantModel):
     )
     is_owner = models.BooleanField(default=False)
 
+    title = models.CharField(max_length=256, blank=True, default="")
+    avatar = models.CharField(max_length=256, blank=True, default="")
+    location = models.CharField(max_length=256, blank=True, default="")
+    company_name = models.CharField(max_length=256, blank=True, default="")
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
@@ -72,4 +77,8 @@ class OrganizationUser(AbstractUser, SynchronousTenantModel):
         "last_name",
         "email",
         "is_owner",
+        "title",
+        "avatar",
+        "location",
+        "company_name",
     ]

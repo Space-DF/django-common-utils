@@ -10,20 +10,24 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--organization", type=str, help="Organization slug")
         parser.add_argument("--name", type=str, help="Space name")
-        parser.add_argument("--logo", type=str, help="Space logo")
         parser.add_argument("--slug_name", type=str, help="Space slug name")
         parser.add_argument("--created_by", type=str, help="Space creator UUID")
 
     def handle(self, *args, **kwargs):
-        organization = kwargs.get("organization") or input("Organization slug: ")
-        name = kwargs.get("name") or input("Name: ")
-        logo = kwargs.get("logo") or input("Logo: ")
-        slug_name = kwargs.get("slug_name") or input("Slug name: ")
-        created_by = kwargs.get("created_by") or input("Creator UUID: ")
+        organization = (
+            kwargs.get("organization") or input("Organization slug [test]: ") or "test"
+        )
+        name = kwargs.get("name") or input("Name [test]: ") or "test"
+        slug_name = kwargs.get("slug_name") or input("Slug name [test]: ") or "test"
+        created_by = (
+            kwargs.get("created_by")
+            or input("Creator UUID [05931ac6-d2c4-4fed-818f-13a0ee506e7e]: ")
+            or "05931ac6-d2c4-4fed-818f-13a0ee506e7e"
+        )
 
         with schema_context(organization):
             space = Space.objects.create(
-                name=name, logo=logo, slug_name=slug_name, created_by=created_by
+                name=name, logo="", slug_name=slug_name, created_by=created_by
             )
 
         self.stdout.write(

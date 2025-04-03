@@ -10,6 +10,9 @@ class TenantMiddleware(TenantMainMiddleware):
         # Connection needs first to be at the public schema, as this is where
         # the tenant metadata is stored.
 
+        if request.path.startswith(settings.STATIC_URL):
+            return
+
         if not request.path.startswith(tuple(settings.PUBLIC_PATHS)):
             connection.set_schema_to_public()
             try:

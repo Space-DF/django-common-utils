@@ -57,6 +57,8 @@ class GoogleLoginCallbackView(generics.RetrieveAPIView):
 
 class GoogleLoginTokenView(generics.CreateAPIView):
     serializer_class = CodeLoginSerializer
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)

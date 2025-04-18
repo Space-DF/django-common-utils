@@ -40,6 +40,33 @@ def get_access_token(
     return response.json()["access_token"]
 
 
+def get_access_token_with_code(
+    authorization_code: str, provider: Literal["GOOGLE"]
+) -> str:
+    provider_settings = settings.SOCIALACCOUNT_PROVIDERS.get(provider.lower(), {}).get(
+        "APP"
+    )
+    print("provider_settings", settings.SOCIALACCOUNT_PROVIDERS, provider.lower())
+
+    token_url = settings.OAUTH_CLIENTS[provider]["TOKEN_URL"]
+    data = {
+        "code": authorization_code,
+        "client_id": provider_settings.get("client_id"),
+        "client_secret": provider_settings.get("secret"),
+        "redirect_uri": settings.OAUTH_CLIENTS[provider]["CALLBACK_URL"],
+        "grant_type": "authorization_code",
+    }
+
+    token_resp = requests.post(token_url, data=data, timeout=5)
+    if token_resp.status_code != 200:
+        return Response(
+            {"error": "Failed to get token", "detail": token_resp.json()},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return token_resp.json().get("access_token")
+
+
 def handle_access_token(access_token, provider: Literal["GOOGLE"]):
     info_url = settings.OAUTH_CLIENTS[provider]["INFO_URL"]
 

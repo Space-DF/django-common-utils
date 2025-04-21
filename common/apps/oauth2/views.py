@@ -1,8 +1,6 @@
 import logging
 from operator import itemgetter
 
-import requests
-from django.conf import settings
 from django.shortcuts import redirect
 from rest_framework import generics, status
 from rest_framework.exceptions import ParseError
@@ -11,7 +9,11 @@ from rest_framework.response import Response
 
 from common.apps.oauth2.serializers import CodeLoginSerializer, OauthLoginSerializer
 from common.utils.encoder import decode_from_base64
-from common.utils.oauth2 import get_access_token, handle_access_token, get_access_token_with_code
+from common.utils.oauth2 import (
+    get_access_token,
+    get_access_token_with_code,
+    handle_access_token,
+)
 
 
 class GoogleLoginView(generics.CreateAPIView):

@@ -1,25 +1,38 @@
-import smtplib
-
-from django.core.mail import send_mail
+import boto3
+from botocore.exceptions import BotoCoreError, ClientError
+from django.conf import settings
 from rest_framework.exceptions import ValidationError
 
+client = boto3.client("ses", region_name=settings.AWS_S3.get("AWS_REGION"))
 
-def send_email(sender, user_email, subject, message):
-    """Send email to user and store it in Redis."""
+
+def send_email(sender, user_emails, subject, html_message):
+    """Send email via Amazon SES API using boto3."""
+
+    if isinstance(user_emails, str):
+        user_emails = [user_emails]
+
     try:
-        send_mail(
-            subject=subject,
-            message="",
-            from_email=sender,
-            recipient_list=user_email,
-            html_message=message,
-            fail_silently=False,
+        response = client.send_email(
+            Source=sender,
+            Destination={"ToAddresses": user_emails},
+            Message={
+                "Subject": {"Data": subject, "Charset": "UTF-8"},
+                "Body": {
+                    "Html": {"Data": html_message, "Charset": "UTF-8"},
+                    "Text": {
+                        "Data": "This email requires an HTML-compatible client.",
+                        "Charset": "UTF-8",
+                    },
+                },
+            },
         )
+        return response
 
-    except smtplib.SMTPDataError:
+    except client.exceptions.MessageRejected:
         raise ValidationError({"error": "Email address is not verified."})
 
-    except smtplib.SMTPException as e:
+    except (BotoCoreError, ClientError) as e:
         raise ValidationError({"error": str(e)})
 
     except Exception as e:

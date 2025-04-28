@@ -36,3 +36,4 @@ class SpaceRoleUser(BaseModel, SynchronousTenantModel):
     organization_user = models.ForeignKey(
         User, related_name="space_role_user", on_delete=models.CASCADE
     )
+    is_default = models.BooleanField(default=False)

@@ -5,6 +5,7 @@ from django.db import transaction
 from django.utils.module_loading import import_string
 
 from common.apps.organization.models import Domain, Organization
+from common.celery.task_senders import send_task
 from common.celery.tasks import task
 
 logger = logging.getLogger(__name__)
@@ -44,3 +45,7 @@ def create_organization(id, name, slug_name, is_active, owner, created_at, updat
 
     if NewOrganizationHandler is not None:
         NewOrganizationHandler(organization, owner).handle()
+        send_task(
+            name="new_action_output",
+            message={"slug_name": organization.slug_name},
+        )

@@ -51,17 +51,32 @@ def setup_organization_task_routing():
     if celery_app.conf.task_routes is None:
         celery_app.conf.task_routes = {}
 
-    celery_app.conf.task_queues = celery_app.conf.task_queues + (
-        Queue(
-            f"{settings.SERVICE_NAME}_new_organization",
-            exchange=Exchange("new_organization", type="fanout"),
-            routing_key="new_organization",
-            queue_arguments={
-                "x-single-active-consumer": True,
-            },
-        ),
-    )
-    celery_app.conf.task_routes["spacedf.tasks.new_organization"] = {
-        "queue": f"{settings.SERVICE_NAME}_new_organization",
-        "routing_key": "new_organization",
-    }
+    organization_queues = [
+        {
+            "name": "new_organization",
+            "exchange": "new_organization",
+            "routing_key": "new_organization",
+        },
+        {
+            "name": "delete_organization",
+            "exchange": "delete_organization",
+            "routing_key": "delete_organization",
+        },
+    ]
+
+    new_queues = []
+    for queue_cfg in organization_queues:
+        queue_name = f"{settings.SERVICE_NAME}_{queue_cfg['name']}"
+        new_queues.append(
+            Queue(
+                queue_name,
+                exchange=Exchange(queue_cfg["exchange"], type="fanout"),
+                routing_key=queue_cfg["routing_key"],
+                queue_arguments={"x-single-active-consumer": True},
+            )
+        )
+        celery_app.conf.task_routes[f"spacedf.tasks.{queue_cfg['name']}"] = {
+            "queue": queue_name,
+            "routing_key": queue_cfg["routing_key"],
+        }
+    celery_app.conf.task_queues = celery_app.conf.task_queues + tuple(new_queues)

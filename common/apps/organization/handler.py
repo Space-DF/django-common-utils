@@ -14,3 +14,17 @@ class NewOrganizationHandlerBase:
     @abstractmethod
     def handle(self):
         pass
+
+
+class DeleteOrganizationHandlerBase:
+    """
+    The base class for Delete Organization Handler
+    Use by set DELETE_ORGANIZATION_HANDLER in Django setting file
+    """
+
+    def __init__(self, organization):
+        self._organization = organization
+
+    @abstractmethod
+    def handle(self):
+        pass

@@ -46,7 +46,6 @@ def get_access_token_with_code(
     provider_settings = settings.SOCIALACCOUNT_PROVIDERS.get(provider.lower(), {}).get(
         "APP"
     )
-    print("provider_settings", settings.SOCIALACCOUNT_PROVIDERS, provider.lower())
 
     token_url = settings.OAUTH_CLIENTS[provider]["TOKEN_URL"]
     data = {

@@ -9,10 +9,7 @@ from rest_framework.response import Response
 
 from common.apps.oauth2.serializers import OauthLoginSerializer
 from common.utils.encoder import decode_from_base64
-from common.utils.oauth2 import (
-    get_access_token,
-    handle_access_token,
-)
+from common.utils.oauth2 import get_access_token, handle_access_token
 
 
 class GoogleLoginView(generics.CreateAPIView):
@@ -39,7 +36,6 @@ class GoogleLoginView(generics.CreateAPIView):
 
 
 class GoogleLoginCallbackView(generics.RetrieveAPIView):
-
     def get(self, request):
         code = request.GET.get("code")
         state = request.GET.get("state")
@@ -54,4 +50,3 @@ class GoogleLoginCallbackView(generics.RetrieveAPIView):
             return Response({"error": str(e)}, status=400)
         fe_redirect_url = f"{callback_url}?code={code}&state={state}"
         return redirect(fe_redirect_url)
-

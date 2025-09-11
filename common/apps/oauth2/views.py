@@ -7,11 +7,10 @@ from rest_framework.exceptions import ParseError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from common.apps.oauth2.serializers import CodeLoginSerializer, OauthLoginSerializer
+from common.apps.oauth2.serializers import OauthLoginSerializer
 from common.utils.encoder import decode_from_base64
 from common.utils.oauth2 import (
     get_access_token,
-    get_access_token_with_code,
     handle_access_token,
 )
 
@@ -56,15 +55,3 @@ class GoogleLoginCallbackView(generics.RetrieveAPIView):
         fe_redirect_url = f"{callback_url}?code={code}&state={state}"
         return redirect(fe_redirect_url)
 
-
-class GoogleLoginTokenView(generics.CreateAPIView):
-    serializer_class = CodeLoginSerializer
-    permission_classes = [AllowAny]
-    authentication_classes = []
-
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        authorization_code = serializer.validated_data["authorization_code"]
-        access_token = get_access_token_with_code(authorization_code, provider="GOOGLE")
-        return handle_access_token(access_token=access_token, provider="GOOGLE")

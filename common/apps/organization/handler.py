@@ -7,9 +7,9 @@ class NewOrganizationHandlerBase:
     Use by set NEW_ORGANIZATION_HANDLER in Django setting file
     """
 
-    def __init__(self, organization, owner_email):
+    def __init__(self, organization, owner):
         self._organization = organization
-        self._owner_email = owner_email
+        self._owner = owner
 
     @abstractmethod
     def handle(self):

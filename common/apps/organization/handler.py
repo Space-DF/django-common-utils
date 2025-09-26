@@ -14,4 +14,3 @@ class NewOrganizationHandlerBase:
     @abstractmethod
     def handle(self):
         pass
-

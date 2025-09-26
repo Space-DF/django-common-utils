@@ -26,7 +26,7 @@ def get_delete_organization_handler():
 
 @task(name="spacedf.tasks.new_organization", max_retries=3)
 @transaction.atomic
-def create_organization(id, name, slug_name, is_active, owner, created_at, updated_at):
+def create_organization(id, name, slug_name, is_active, owner, created_at, updated_at, tenant_slug=None):
     logger.info(
         f"create_organization({id}, {name}, {slug_name}, {is_active}, {owner}, {created_at}, {updated_at})"
     )
@@ -50,4 +50,18 @@ def create_organization(id, name, slug_name, is_active, owner, created_at, updat
     NewOrganizationHandler = get_new_organization_handler()
 
     if NewOrganizationHandler is not None:
-        NewOrganizationHandler(organization, owner).handle()
+        # Pass tenant_slug to handler for topic-based routing
+        NewOrganizationHandler(organization, owner).handle(tenant_slug=slug_name)
+
+
+@task(name="spacedf.tasks.delete_organization", max_retries=3)
+@transaction.atomic
+def delete_organization(slug_name, tenant_slug=None):
+    logger.info(f"delete_organization({slug_name})")
+    DeleteOrganizationHandler = get_delete_organization_handler()
+
+    organization = Organization.objects.get(schema_name=slug_name)
+    if DeleteOrganizationHandler is not None:
+        # Pass tenant_slug to handler for topic-based routing
+        DeleteOrganizationHandler(organization).handle(tenant_slug=slug_name)
+    organization.delete(force_drop=True)

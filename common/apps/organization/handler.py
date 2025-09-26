@@ -7,10 +7,25 @@ class NewOrganizationHandlerBase:
     Use by set NEW_ORGANIZATION_HANDLER in Django setting file
     """
 
-    def __init__(self, organization, owner):
+    def __init__(self, organization, owner_email):
+        self._organization = organization
+        self._owner_email = owner_email
+
+    @abstractmethod
+    def handle(self, tenant_slug=None):
+        pass
+
+
+class DeleteOrganizationHandlerBase:
+    """
+    The base class for Delete Organization Handler
+    Use by set DELETE_ORGANIZATION_HANDLER in Django setting file
+    """
+
+    def __init__(self, organization):
         self._organization = organization
         self._owner = owner
 
     @abstractmethod
-    def handle(self):
+    def handle(self, tenant_slug=None):
         pass

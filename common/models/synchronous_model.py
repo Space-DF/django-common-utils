@@ -31,10 +31,13 @@ class SynchronousTenantModel(models.Model):
             synchronous_fields = self.synchronous_fields
         else:
             synchronous_fields = [field.name for field in self._meta.get_fields()]
+        
+        tenant_slug = connection.get_tenant().slug_name
         send_task(
             name=f"update_{self._meta.model_name}",
             message={
-                "organization_slug_name": connection.get_tenant().slug_name,
+                "organization_slug_name": tenant_slug,
+                "tenant_slug": tenant_slug,  # Add tenant_slug for topic-based routing
                 "data": {
                     key: value
                     for (key, value) in model_to_dict(self).items()
@@ -56,10 +59,12 @@ class SynchronousTenantModel(models.Model):
         return result
 
     def send_synchronous_delete_message(self, pk):
+        tenant_slug = connection.get_tenant().slug_name
         send_task(
             name=f"delete_{self._meta.model_name}",
             message={
-                "organization_slug_name": connection.get_tenant().slug_name,
+                "organization_slug_name": tenant_slug,
+                "tenant_slug": tenant_slug,  # Add tenant_slug for topic-based routing
                 "pk": pk,
             },
         )

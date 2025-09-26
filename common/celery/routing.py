@@ -6,77 +6,74 @@ from kombu import Exchange, Queue
 def setup_synchronous_model_task_routing():
     celery_app = import_string(settings.CELERY_APP)
 
-    if celery_app.conf.task_queues is None:
-        celery_app.conf.task_queues = ()
-    if celery_app.conf.task_routes is None:
-        celery_app.conf.task_routes = {}
-
+    # Topic-based routing for model events (spaces, etc.)
+    app_events_exchange = Exchange("app.events", type="topic")
+    
     if hasattr(settings, "CLONE_MODELS"):
         for model_name in settings.CLONE_MODELS:
-            celery_app.conf.task_queues = celery_app.conf.task_queues + (
-                Queue(
-                    f"{settings.SERVICE_NAME}_update_{model_name}",
-                    exchange=Exchange(f"update_{model_name}", type="fanout"),
-                    routing_key=f"update_{model_name}",
-                    queue_arguments={
-                        "x-single-active-consumer": True,
-                    },
-                ),
-                Queue(
-                    f"{settings.SERVICE_NAME}_delete_{model_name}",
-                    exchange=Exchange(f"delete_{model_name}", type="fanout"),
-                    routing_key=f"delete_{model_name}",
-                    queue_arguments={
-                        "x-single-active-consumer": True,
-                    },
-                ),
-            )
+            # Configure task routes with topic-based routing keys
             update_task_name = f"spacedf.tasks.update_{model_name}"
             celery_app.conf.task_routes[update_task_name] = {
-                "queue": f"{settings.SERVICE_NAME}_update_{model_name}",
-                "routing_key": f"update_{model_name}",
+                "queue": f"{settings.SERVICE_NAME}-service",
+                "exchange": "app.events",
+                "routing_key": f"*.{model_name}.updated",
             }
             delete_task_name = f"spacedf.tasks.delete_{model_name}"
             celery_app.conf.task_routes[delete_task_name] = {
-                "queue": f"{settings.SERVICE_NAME}_delete_{model_name}",
-                "routing_key": f"delete_{model_name}",
+                "queue": f"{settings.SERVICE_NAME}-service",
+                "exchange": "app.events",
+                "routing_key": f"*.{model_name}.deleted",
             }
 
 
 def setup_organization_task_routing():
     celery_app = import_string(settings.CELERY_APP)
+    
+    # print(f"Setting up topic-based routing for {settings.SERVICE_NAME}")
 
-    if celery_app.conf.task_queues is None:
-        celery_app.conf.task_queues = ()
-    if celery_app.conf.task_routes is None:
-        celery_app.conf.task_routes = {}
-
-    organization_queues = [
-        {
-            "name": "new_organization",
-            "exchange": "new_organization",
-            "routing_key": "new_organization",
+    # Topic-based routing for organization events
+    app_events_exchange = Exchange("app.events", type="topic")
+    
+    # Create service queue with topic-based bindings
+    service_queue = Queue(
+        f"{settings.SERVICE_NAME}-service",
+        exchange=app_events_exchange,
+        routing_key="*.*.*",  # Bind to all tenant events
+        queue_arguments={"x-single-active-consumer": True},
+    )
+    
+    # Set default queue and exchange to use topic-based approach
+    celery_app.conf.task_default_queue = f"{settings.SERVICE_NAME}-service"
+    celery_app.conf.task_default_exchange = "app.events"
+    celery_app.conf.task_default_routing_key = "*.*.*"
+    
+    # Completely replace task queues with topic-based queue
+    celery_app.conf.task_queues = (service_queue,)
+    
+    # Completely replace task routes with topic-based routing
+    celery_app.conf.task_routes = {
+        "spacedf.tasks.new_organization": {
+            "queue": f"{settings.SERVICE_NAME}-service",
+            "exchange": "app.events",
+            "routing_key": "*.org.created",
         },
-        {
-            "name": "delete_organization",
-            "exchange": "delete_organization",
-            "routing_key": "delete_organization",
+        "spacedf.tasks.delete_organization": {
+            "queue": f"{settings.SERVICE_NAME}-service", 
+            "exchange": "app.events",
+            "routing_key": "*.org.deleted",
         },
-    ]
-
-    new_queues = []
-    for queue_cfg in organization_queues:
-        queue_name = f"{settings.SERVICE_NAME}_{queue_cfg['name']}"
-        new_queues.append(
-            Queue(
-                queue_name,
-                exchange=Exchange(queue_cfg["exchange"], type="fanout"),
-                routing_key=queue_cfg["routing_key"],
-                queue_arguments={"x-single-active-consumer": True},
-            )
-        )
-        celery_app.conf.task_routes[f"spacedf.tasks.{queue_cfg['name']}"] = {
-            "queue": queue_name,
-            "routing_key": queue_cfg["routing_key"],
+        "spacedf.tasks.update_space": {
+            "queue": f"{settings.SERVICE_NAME}-service",
+            "exchange": "app.events",
+            "routing_key": "*.space.updated",
+        },
+        "spacedf.tasks.delete_space": {
+            "queue": f"{settings.SERVICE_NAME}-service",
+            "exchange": "app.events",
+            "routing_key": "*.space.deleted",
         }
-    celery_app.conf.task_queues = celery_app.conf.task_queues + tuple(new_queues)
+    }
+    
+    # print(f"Topic-based routing setup complete for {settings.SERVICE_NAME}")
+    # print(f"Default queue: {celery_app.conf.task_default_queue}")
+    # print(f"Task queues: {len(celery_app.conf.task_queues)}")

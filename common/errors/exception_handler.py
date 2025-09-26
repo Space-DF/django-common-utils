@@ -9,7 +9,7 @@ def custom_exception_handler(exc, context):
 
     # Now add the error code to the response.
     if response is not None:
-        if isinstance(exc, APIException):
+        if isinstance(exc, APIException) and isinstance(response.data, dict):
             response.data["code"] = exc.get_codes()
 
     return response

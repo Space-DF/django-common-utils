@@ -12,6 +12,7 @@ class Space(BaseModel, SynchronousTenantModel):
     is_active = models.BooleanField(default=True)
     is_default = models.BooleanField(default=False)
     total_devices = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    description = models.TextField(null=True, blank=True)
     created_by = models.UUIDField()
 
     class Meta:

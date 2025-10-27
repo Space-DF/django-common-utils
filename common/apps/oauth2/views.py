@@ -39,8 +39,9 @@ class GoogleLoginCallbackView(generics.RetrieveAPIView):
     def get(self, request):
         code = request.GET.get("code")
         state = request.GET.get("state")
+        error = request.GET.get("error")
 
-        if not code or not state:
+        if not state:
             return Response({"error": "Missing code or state"}, status=400)
 
         try:
@@ -48,5 +49,9 @@ class GoogleLoginCallbackView(generics.RetrieveAPIView):
             callback_url = state_data["callback_url"]
         except Exception as e:
             return Response({"error": str(e)}, status=400)
+
+        if error == "access_denied":
+            return redirect(callback_url)
+
         fe_redirect_url = f"{callback_url}?code={code}&state={state}"
         return redirect(fe_redirect_url)

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('space', '0002_space_is_default'),
+        ("space", "0002_space_is_default"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='space',
-            name='description',
+            model_name="space",
+            name="description",
             field=models.TextField(blank=True, null=True),
         ),
     ]

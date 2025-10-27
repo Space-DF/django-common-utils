@@ -52,6 +52,6 @@ class GoogleLoginCallbackView(generics.RetrieveAPIView):
 
         if error == "access_denied":
             return redirect(callback_url)
-        
+
         fe_redirect_url = f"{callback_url}?code={code}&state={state}"
         return redirect(fe_redirect_url)

@@ -92,16 +92,7 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
         if refresh_token_obj.family.status != RefreshTokenFamilyStatus.Active:
             raise TokenError(_("Refresh token is inactive"))
 
-        if "access_token_handler" in self.context:
-            params = {
-                "access_token": refresh.access_token,
-                "user_id": refresh.payload["user_id"],
-                **self.context["access_token_handler_params"],
-            }
-            access = self.context["access_token_handler"](**params)
-            data = {"access": str(access)}
-        else:
-            data = {"access": str(refresh.access_token)}
+        data = {"access": str(refresh.access_token)}
 
         refresh.set_jti()
         refresh.set_exp()

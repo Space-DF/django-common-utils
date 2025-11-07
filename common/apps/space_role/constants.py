@@ -1,6 +1,12 @@
 from django.db import models
 
 
+class SpaceRoleType(models.TextChoices):
+    ADMIN_ROLE = "Admin"
+    EDITOR_ROLE = "Editor"
+    VIEWER_ROLE = "Viewer"
+
+
 class SpacePermission(models.TextChoices):
     # Space
     UPDATE_SPACE = "UPDATE_SPACE"

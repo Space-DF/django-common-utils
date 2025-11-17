@@ -3,7 +3,12 @@ from botocore.exceptions import BotoCoreError, ClientError
 from django.conf import settings
 from rest_framework.exceptions import ValidationError
 
-client = boto3.client("ses", region_name=settings.AWS_S3.get("AWS_REGION"))
+client = boto3.client(
+    "ses",
+    region_name=settings.AWS_S3.get("AWS_REGION"),
+    aws_access_key_id=settings.EMAIL_HOST_USER,
+    aws_secret_access_key=settings.EMAIL_HOST_PASSWORD,
+)
 
 
 def send_email(sender, user_emails, subject, html_message):

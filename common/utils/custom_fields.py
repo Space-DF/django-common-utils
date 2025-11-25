@@ -28,4 +28,4 @@ class HexCharField(serializers.CharField):
             raise serializers.ValidationError(
                 f"Value must be {self.length} hex characters"
             )
-        return value
+        return value.lower()

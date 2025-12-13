@@ -154,72 +154,6 @@ class TelemetryServiceClient:
             )
             raise
 
-    def get_last_location(
-        self, device_id: str, organization_slug: str, space_slug: str
-    ) -> LocationPoint | None:
-        """
-        Fetch the most recent location for a device from the telemetry service
-
-        Args:
-            device_id: The device ID to fetch data for
-            space_slug: The organization slug
-
-        Returns:
-            The most recent location point, or None if not found
-        """
-        endpoint = f"{self.base_url}/telemetry/v1/location/last"
-
-        params = {
-            "device_id": device_id,
-            "space_slug": space_slug,
-        }
-
-        try:
-            response = requests.get(
-                endpoint,
-                params=params,
-                timeout=self.timeout,
-                headers={
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                    "X-Organization": organization_slug,
-                },
-            )
-
-            logger.info(f"Response status code: {response.status_code}")
-
-            if response.status_code == 404:
-                logger.warning(f"No location data found for device {device_id}")
-                return None
-
-            response.raise_for_status()
-
-            data = response.json()
-            logger.info(f"Response: {data}")
-
-            if "error" in data:
-                logger.warning(f"Error from telemetry service: {data['error']}")
-                return None
-
-            location_point = LocationPoint(
-                timestamp=_parse_timestamp(data.get("timestamp", "")),
-                latitude=data.get("latitude", 0),
-                longitude=data.get("longitude", 0),
-                device_id=device_id,
-            )
-
-            return location_point
-
-        except Timeout:
-            logger.error(f"Timeout while fetching last location for device {device_id}")
-            return None
-
-        except RequestException as e:
-            logger.error(
-                f"Error fetching last location for device {device_id}: {str(e)}"
-            )
-            return None
-
     def get_widget_data(
         self,
         entity_id: str,
@@ -271,6 +205,52 @@ class TelemetryServiceClient:
 
         except RequestException as e:
             logger.error(f"Error fetching widget data for entity {entity_id}: {str(e)}")
+            raise
+
+    def get_device_properties(
+        self,
+        device_id: str,
+        organization_slug: str,
+        space_slug: str,
+    ) -> dict:
+        """
+        Fetch all device properties (all entities data) from telemetry service
+
+        """
+        endpoint = f"{self.base_url}/telemetry/v1/data/latest"
+
+        params = {
+            "device_id": device_id,
+            "space_slug": space_slug,
+        }
+
+        try:
+            response = requests.get(
+                endpoint,
+                params=params,
+                timeout=self.timeout,
+                headers={
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "X-Organization": organization_slug,
+                },
+            )
+
+            logger.info(f"Device properties response status: {response.status_code}")
+
+            if response.status_code == 404:
+                logger.warning(
+                    f"404 - No device properties found for device {device_id}"
+                )
+                return {}
+
+            response.raise_for_status()
+            return response.json()
+
+        except RequestException as e:
+            logger.error(
+                f"Error fetching device properties for device {device_id}: {str(e)}"
+            )
             raise
 
     def check_health(self) -> bool:

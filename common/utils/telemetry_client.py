@@ -161,7 +161,6 @@ class TelemetryServiceClient:
         organization_slug: str,
         start_time: str | None = None,
         end_time: str | None = None,
-        group_by: str | None = None,
     ) -> dict:
         """
         Fetch widget data for a specific entity from the telemetry service
@@ -174,9 +173,6 @@ class TelemetryServiceClient:
 
         if end_time:
             params["end_time"] = end_time
-
-        if group_by:
-            params["group_by"] = group_by
 
         try:
             response = requests.get(

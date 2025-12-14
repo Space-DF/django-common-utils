@@ -86,7 +86,7 @@ class TelemetryServiceClient:
         Raises:
             RequestException: If the API call fails
         """
-        endpoint = f"{self.base_url}/telemetry/v1/location/history"
+        endpoint = f"{self.base_url}/api/telemetry/v1/location/history"
         params = {"device_id": device_id, "space_slug": space_slug, "limit": limit}
 
         if start:
@@ -166,7 +166,7 @@ class TelemetryServiceClient:
         """
         Fetch widget data for a specific entity from the telemetry service
         """
-        endpoint = f"{self.base_url}/telemetry/v1/widget/data/{entity_id}"
+        endpoint = f"{self.base_url}/api/telemetry/v1/widget/data/{entity_id}"
         params = {"display_type": display_type}
 
         if start_time:
@@ -217,7 +217,7 @@ class TelemetryServiceClient:
         Fetch all device properties (all entities data) from telemetry service
 
         """
-        endpoint = f"{self.base_url}/telemetry/v1/data/latest"
+        endpoint = f"{self.base_url}/api/telemetry/v1/data/latest"
 
         params = {
             "device_id": device_id,

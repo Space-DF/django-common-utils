@@ -17,12 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 class EMQXClient:
-    def __init__(self) -> None:
+    def __init__(self, token: str | None = None) -> None:
         self.session = requests.Session()
-        self.session.auth = (
-            settings.EMQX_API_APP_ID,
-            settings.EMQX_API_APP_SECRET,
-        )
         self.base_url = settings.EMQX_API_URL.rstrip("/")
         self.rule_prefix = getattr(settings, "EMQX_RULE_ID", "rabbitmq_device_messages")
         self.default_rule_sql = getattr(
@@ -30,6 +26,38 @@ class EMQXClient:
             "EMQX_RULE_SQL",
             'SELECT * FROM "tenant/+/device/data"',
         )
+
+        self.token = token
+        if not self.token:
+            username = getattr(settings, "EMQX_USERNAME")
+            password = getattr(settings, "EMQX_PASSWORD")
+            if username and password:
+                self.token = self.get_token(username, password)
+        if self.token:
+            self.session.headers.update({"Authorization": f"Bearer {self.token}"})
+            logger.debug("EMQXClient initialized with Bearer token authentication")
+        else:
+            logger.warning("EMQXClient initialized without authentication token")
+
+    def get_token(self, username: str, password: str) -> str:
+        try:
+            resp = self.session.post(
+                f"{self.base_url}/login",
+                json={"username": username, "password": password},
+            )
+            resp.raise_for_status()
+            payload = resp.json()
+            token = payload.get("token")
+            if not token:
+                raise ValueError("No token returned from EMQX login endpoint")
+
+            return token
+        except requests.HTTPError as e:
+            logger.error(f"Failed to authenticate with EMQX: {str(e)}")
+            raise
+        except Exception as e:
+            logger.error(f"Error getting EMQX token for user: {e}")
+            raise
 
     def _log_and_raise(self, resp: requests.Response) -> None:
         try:

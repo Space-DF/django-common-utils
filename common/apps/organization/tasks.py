@@ -20,9 +20,7 @@ def get_new_organization_handler():
 @task(name="spacedf.tasks.new_organization", max_retries=3)
 @transaction.atomic
 def create_organization(id, name, slug_name, is_active, owner, created_at, updated_at):
-    logger.info(
-        f"create_organization({id}, {name}, {slug_name}, {is_active}, {owner}, {created_at}, {updated_at})"
-    )
+    logger.info(f"create_organization: owner_email={owner.get('email')}, org_slug={slug_name}")
 
     organization = Organization(
         schema_name=slug_name,

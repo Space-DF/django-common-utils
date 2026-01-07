@@ -69,8 +69,8 @@ class RabbitMQProvisioner:
                 for entry in response.json()
                 if entry.get("name") is not None
             }
-        except requests.RequestException as exc:  # noqa: BLE001
-            logger.error("Failed to list RabbitMQ vhosts: %s", exc)
+        except requests.RequestException as e:
+            logger.error("Failed to list RabbitMQ vhosts: %s", e)
             return set()
 
     def get_vhost_load(self, vhost_name: str) -> Dict:
@@ -181,11 +181,9 @@ class RabbitMQProvisioner:
                     vhost=vhost_name,
                     connector_name=emqx_client.connector_name(vhost_name),
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(
-                    "Failed to configure EMQX connector for new vhost %s: %s",
-                    vhost_name,
-                    exc,
+                    f"Failed to configure EMQX connector for new vhost {vhost_name}: {str(e)}"
                 )
             return True
         except requests.RequestException as e:
@@ -357,9 +355,9 @@ class RabbitMQProvisioner:
                 )
                 return slugs
 
-        except Exception as exc:
+        except Exception as e:
             logger.warning(
-                f"Failed to retrieve organization slugs for vhost {vhost_name}: {exc}"
+                f"Failed to retrieve organization slugs for vhost {vhost_name}: {e}"
             )
             if exclude:
                 return []
@@ -478,11 +476,9 @@ class RabbitMQProvisioner:
                     )
 
                 emqx_client.ensure_vhost_rule(vhost_name, existing_slugs)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as e:
                 logger.error(
-                    "Failed to configure EMQX resources for org %s: %s",
-                    org_slug,
-                    exc,
+                    f"Failed to configure EMQX resources for org {org_slug}: {str(e)}"
                 )
 
             return {
@@ -566,11 +562,9 @@ class RabbitMQProvisioner:
                     )
 
                 emqx_client.teardown_tenant(vhost_name, remaining_slugs)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(
-                    "Failed to teardown EMQX resources for org %s: %s",
-                    org_slug,
-                    exc,
+                    f"Failed to teardown EMQX resources for org {org_slug}: {str(e)}"
                 )
 
             return True

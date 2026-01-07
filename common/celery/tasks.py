@@ -28,8 +28,8 @@ def task(max_retries=3, bind=False, task_acks_late=True, prefetch_count=1, **opt
                     handler(self=self, **kwargs)
                 else:
                     handler(**kwargs)
-            except Exception as ex:
-                logger.exception(ex)
+            except Exception as e:
+                logger.exception(e)
                 self.retry(countdown=3**self.request.retries)
 
         return inner

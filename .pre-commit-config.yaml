@@ -19,3 +19,8 @@ repos:
       - id: bandit
         args: ["-r", ".", "-x", "**/venv/*"]
         pass_filenames: false
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.4
+    hooks:
+      - id: codespell
+        args: ['--skip=*.md,venv,migrations,*.pyc']

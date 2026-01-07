@@ -20,9 +20,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8==4.0.1
         pip install bandit==1.7.8
+        pip install codespell==2.2.4
     - name: Run Flake8
       run: |
         flake8
     - name: Run Bandit
       run: |
         bandit -r .
+    - name: Run Spell Check
+      run: |
+        codespell --skip="*.md,venv,migrations,*.pyc"

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Invitation Email{% endblock %}
+
+{% block content %}
+    <div class="illustration">
+      <img src="{{ host }}/static/images/invitation.png"/>
+    </div>
+    <div style="margin-bottom: 30px;">
+        <h1>New Invitation</h1>
+        <p style="text-align: start;">Hello,</p>
+        <p style="text-align: start;">{{sender_name}} has invited you to join space on SpaceDF Platform.<br>By joining, you’ll get access to shared devices, dashboards, and resources for easier collaboration.</p>
+        <p style="text-align: start;">To accept the invitation, simply click the button below:</p>
+        <p style="text-align: start;"><a style="text-align: start;" href="{{ invite_url }}" class="btn-invite">Accept Invitation</a></p>
+        <p style="text-align: start;">Note: This invitation will expire in 7 days.</p>
+        <p style="text-align: start;">Welcome you on board and look forward to working with you!</p>
+        <p style="text-align: start;"><b>The @SpaceDF Team</b></p>
+    </div>
+    
+    <p>If you did not initiate this request_please contact us at 
+      <a href="mailto:support@spacedf.com">support@spacedf.com</a>
+    </p>
+{% endblock %}

@@ -6,6 +6,7 @@ from rest_framework import generics, status
 from rest_framework.exceptions import ParseError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from common.apps.oauth2.serializers import OauthLoginSerializer
 from common.utils.encoder import decode_from_base64
@@ -35,7 +36,7 @@ class GoogleLoginView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class GoogleLoginCallbackView(generics.RetrieveAPIView):
+class GoogleLoginCallbackView(APIView):
     def get(self, request):
         code = request.GET.get("code")
         state = request.GET.get("state")

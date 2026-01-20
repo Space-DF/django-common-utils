@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}{% endblock %}</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background-color: #fff;
+      color: #1c1c1c;
+    }
+
+    .container {
+      max-width: 590px;
+      margin: 0 auto;
+      padding: 40px 0px 10px;
+      text-align: center;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    .logo {
+      margin-bottom: 20px;
+    }
+
+    .illustration img {
+      width: 100%;
+      max-width: 350px;
+      text-align: start;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    p {
+      font-size: 16px;
+    }
+
+    .btn {
+      background-color: #1c1c28;
+      color: white !important;
+      padding: 12px 24px;
+      border-radius: 8px;
+      display: inline-block;
+      margin-bottom: 30px;
+      font-size: 15px;
+    }
+
+    .footer {
+      background-color: #1c1c28;
+      color: #fff;
+      padding: 20px 5px 10px;
+      border-radius: 16px;
+      max-width: 590px;
+      margin: 0 auto;
+    }
+
+    .footer table.footer-table {
+      padding: 0px 20px;
+    }
+
+    .footer-logo {
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .social-icons {
+      display: flex;
+    }
+
+    .social-icons a {
+      margin: 0 0 0 15px;
+      color: #fff;
+      font-size: 20px;
+    }
+
+    .footer-top {
+      display: flex;
+    }
+
+    .footer-bottom {
+      display: flex;
+      font-size: 16px;
+      color: #FFFFFF;
+      margin-top: 5px;
+    }
+
+    .round {
+      display: inline-block; 
+      background: #2D2F30; 
+      border-radius: 50%; 
+      width: 40px; 
+      height: 40px; 
+      text-align: center;
+      margin-left: 10px;
+    }
+
+    .footer-bottom a {
+      color: #FFFFFF;
+      font-size: 15px;
+    }
+    
+    table td a{
+      color: white !important;
+    }
+
+    .footer-bottom p {
+      color: #FFFFFF;
+      font-size: 15px;
+    }
+
+    .btn-invite {
+        display: inline-block;
+        color: white !important;
+        background-color: #1c1c28;
+        padding: 15px 20px 15px 20px;
+        border-radius: 10px;
+        text-decoration: none;
+        background-image: url('{{ host }}/static/images/arrow_up.png');
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        background-size: 18px 18px;
+        padding-right: 30px;
+    }
+
+    .btn-invite:hover {
+        background-color: #292626;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <img src="{{ host }}/static/images/logo_black.png" width="200" height="50"/>
+    </div>
+
+    {% block content %}{% endblock %}
+
+  </div>
+  <div class="footer">
+    
+    <table class="footer-table" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+      <tr>
+        <td align="left">
+          <img src="{{ host }}/static/images/logo_white.png" width="180" height="50" alt="Logo" />
+        </td>
+        <td align="right">
+          <table cellpadding="0" cellspacing="0" role="presentation">
+            <tr>
+              <td>
+                <a href="#" class="round">
+                  <img src="{{ host }}/static/images/in.png" width="24" height="24" alt="LinkedIn" style="margin-top: 8px;" />
+                </a>
+              </td>
+              <td>
+                <a href="#" class="round">
+                  <img src="{{ host }}/static/images/face_book.png" width="24" height="24" alt="Facebook" style="margin-top: 8px;" />
+                </a>
+              </td>
+              <td>
+                <a href="#" class="round">
+                  <img src="{{ host }}/static/images/instagram.png" width="24" height="24" alt="Instagram" style="margin-top: 8px;" />
+                </a>
+              </td>
+              <td>
+                <a href="#" class="round">
+                  <img src="{{ host }}/static/images/tik_tok.png" width="24" height="24" alt="TikTok" style="margin-top: 8px;" />
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <p>©2025 Digital Fortress. All rights reserved.</p>
+        </td>
+        <td>
+          <p style="display: block; float: right; "><a href="#">Privacy Policy</a></p>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

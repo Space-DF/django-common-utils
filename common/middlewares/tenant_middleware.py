@@ -1,0 +1,36 @@
+from django.conf import settings
+from django.core.exceptions import DisallowedHost
+from django.db import connection
+from django_tenants.middleware import TenantMainMiddleware
+from django_tenants.utils import get_tenant_domain_model
+
+
+class TenantMiddleware(TenantMainMiddleware):
+    def process_request(self, request):
+        # Connection needs first to be at the public schema, as this is where
+        # the tenant metadata is stored.
+
+        if request.path.startswith(settings.STATIC_URL):
+            return
+
+        if not request.path.startswith(tuple(settings.PUBLIC_PATHS)):
+            connection.set_schema_to_public()
+            try:
+                hostname = self.hostname_from_request(request)
+            except DisallowedHost:
+                from django.http import HttpResponseNotFound
+
+                return HttpResponseNotFound()
+
+            domain_model = get_tenant_domain_model()
+            try:
+                tenant = self.get_tenant(domain_model, hostname)
+            except domain_model.DoesNotExist:
+                self.no_tenant_found(request, hostname)
+                return
+
+            tenant.domain_url = hostname
+            request.tenant = tenant
+            connection.set_tenant(request.tenant)
+
+        self.setup_url_routing(request)

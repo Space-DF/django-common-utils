@@ -6,8 +6,7 @@ setup(
     include_package_data=True,
     package_data={
         "common": [
-            "templates/*.html",
-            "static/*",
+            "templates/**/*",
             "static/**/*",
         ],
     },

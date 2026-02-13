@@ -1,0 +1,161 @@
+from rest_framework import mixins
+from rest_framework.exceptions import ParseError
+from rest_framework.generics import GenericAPIView
+
+from common.apps.space.models import Space
+
+
+class SpaceAPIView(GenericAPIView):
+    space_field = None
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if getattr(self, "swagger_fake_view", False):
+            return queryset
+
+        if self.space_field is None:
+            raise Exception(
+                "'%s' should either include a `space_field` attribute, or override the `get_queryset()` method."
+                % self.__class__.__name__
+            )
+
+        space_slug_name = self.request.headers.get("X-Space", None)
+        if space_slug_name is None:
+            raise ParseError("X-Space header is required")
+
+        filters = {
+            f"{self.space_field}__slug_name": space_slug_name,
+            f"{self.space_field}__is_active": True,
+        }
+
+        return queryset.filter(**filters)
+
+    def create_with_space(self, serializer):
+        if "__" not in self.space_field:
+            space = Space.objects.get(slug_name=self.request.headers.get("X-Space"))
+            return serializer.save(**{self.space_field: space})
+
+        return serializer.save()
+
+
+class SpaceCreateAPIView(mixins.CreateModelMixin, SpaceAPIView):
+    """
+    Concrete view for creating a model instance of space.
+    """
+
+    def perform_create(self, serializer):
+        self.create_with_space(serializer)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+class SpaceListAPIView(mixins.ListModelMixin, SpaceAPIView):
+    """
+    Concrete view for listing a queryset of space.
+    """
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+
+class SpaceRetrieveAPIView(mixins.RetrieveModelMixin, SpaceAPIView):
+    """
+    Concrete view for retrieving a model instance of space.
+    """
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+
+class SpaceDestroyAPIView(mixins.DestroyModelMixin, SpaceAPIView):
+    """
+    Concrete view for deleting a model instance of space.
+    """
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
+class SpaceUpdateAPIView(mixins.UpdateModelMixin, SpaceAPIView):
+    """
+    Concrete view for updating a model instance of space.
+    """
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+
+class SpaceListCreateAPIView(
+    mixins.ListModelMixin, mixins.CreateModelMixin, SpaceAPIView
+):
+    """
+    Concrete view for listing a queryset or creating a model instance of space.
+    """
+
+    def perform_create(self, serializer):
+        self.create_with_space(serializer)
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+class SpaceRetrieveUpdateAPIView(
+    mixins.RetrieveModelMixin, mixins.UpdateModelMixin, SpaceAPIView
+):
+    """
+    Concrete view for retrieving, updating a model instance of space.
+    """
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+
+class SpaceRetrieveDestroyAPIView(
+    mixins.RetrieveModelMixin, mixins.DestroyModelMixin, SpaceAPIView
+):
+    """
+    Concrete view for retrieving or deleting a model instance of space.
+    """
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
+class SpaceRetrieveUpdateDestroyAPIView(
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    SpaceAPIView,
+):
+    """
+    Concrete view for retrieving, updating or deleting a model instance of space.
+    """
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)

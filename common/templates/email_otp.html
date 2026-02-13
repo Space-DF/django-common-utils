@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}One-Time Sign-In Code{% endblock %}
+
+{% block content %}
+    <div class="illustration">
+      <img src="{{ host }}/static/images/verification_code.png" style="max-width: 150px;"/>
+    </div>
+    <div style="margin-bottom: 30px;">
+        <h1>Your Verification Code</h1>
+        <p style="text-align: start;">Hello,</p>
+        <p style="text-align: start;">Thank you for signing up to SpaceDF!<br>To verify your email and complete your account setup, please use the one-time code below:</p>
+        <p style="text-align: start; font-size: 40px; margin: 0px; color: rgb(0, 0, 238);">{{ otp_code }}</p>
+        <p style="text-align: start;">This code will expire in <b>10 minutes</b></p>
+        <p style="text-align: start;">Best regards,</p>
+        <p style="text-align: start;"><b>The @SpaceDF Team</b></p>
+    </div>
+    <p>If you did not initiate this request, please contact us at 
+      <a href="mailto:support@spacedf.com">support@spacedf.com</a>
+    </p>
+{% endblock %}

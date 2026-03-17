@@ -127,7 +127,7 @@ class TelemetryServiceClient:
             response.raise_for_status()
 
             data = response.json()
-            locations = data.get("locations", [])
+            locations = data.get("results", [])
             logger.info(f"Received {len(locations)} locations")
 
             formatted_locations: list[LocationPoint] = []

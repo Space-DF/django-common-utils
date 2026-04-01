@@ -38,12 +38,13 @@ class GoogleLoginView(generics.CreateAPIView):
 
 
 class GoogleLoginCallbackView(APIView):
+
     def get(self, request):
         code = request.GET.get("code")
         state = request.GET.get("state")
         error = request.GET.get("error")
 
-        if not state:
+        if not code or not state:
             return Response({"error": "Missing code or state"}, status=400)
 
         try:

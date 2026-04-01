@@ -1,5 +1,6 @@
 import logging
 from operator import itemgetter
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from django.shortcuts import redirect
 from rest_framework import generics, status
@@ -37,12 +38,13 @@ class GoogleLoginView(generics.CreateAPIView):
 
 
 class GoogleLoginCallbackView(APIView):
+
     def get(self, request):
         code = request.GET.get("code")
         state = request.GET.get("state")
         error = request.GET.get("error")
 
-        if not state:
+        if not code or not state:
             return Response({"error": "Missing code or state"}, status=400)
 
         try:
@@ -54,5 +56,11 @@ class GoogleLoginCallbackView(APIView):
         if error == "access_denied":
             return redirect(callback_url)
 
-        fe_redirect_url = f"{callback_url}?code={code}&state={state}"
-        return redirect(fe_redirect_url)
+        parsed_url = urlparse(callback_url)
+        query_params = parse_qs(parsed_url.query)
+        query_params["code"] = code
+        query_params["state"] = state
+        new_query = urlencode(query_params, doseq=True)
+        new_url = urlunparse(parsed_url._replace(query=new_query))
+
+        return redirect(new_url)

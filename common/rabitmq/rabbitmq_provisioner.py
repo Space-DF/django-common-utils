@@ -436,11 +436,20 @@ class RabbitMQProvisioner:
                 f"tenant.{org_slug}.transformed.device.location",
             )
 
+            # Bind org exchange -> transformed data queue for telemetry
             self.create_binding(
                 vhost_name,
                 exchange_name,
                 transformed_data_queue,
                 f"tenant.{org_slug}.space.*.entity.*.telemetry",
+            )
+
+            # Bind org exchange -> transformed data queue for device events
+            self.create_binding(
+                vhost_name,
+                exchange_name,
+                transformed_data_queue,
+                f"tenant.{org_slug}.space.*.device.*.event",
             )
 
             logger.info(f"Successfully provisioned tenant: {org_slug}")

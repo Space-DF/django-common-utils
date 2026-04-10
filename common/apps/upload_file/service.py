@@ -14,7 +14,7 @@ def put_presigned_url(bucket_name, expiration=3600):
         file_name = uuid.uuid4()
         presigned_url = client.generate_presigned_url(
             ClientMethod="put_object",
-            Params={"Bucket": bucket_name, "Key": f"uploads/{file_name}.png"},
+            Params={"Bucket": bucket_name, "Key": f"uploads/{file_name}"},
             ExpiresIn=expiration,
             HttpMethod="PUT",
         )

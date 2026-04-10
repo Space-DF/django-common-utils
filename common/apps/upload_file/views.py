@@ -20,7 +20,7 @@ class PutPresignedURL(APIView):
 class GetPresignedURL(APIView):
     def get(self, request, *args, **kwargs):
         filename = self.kwargs.get("filename")
-        link_file = f"uploads/{filename}.png"
+        link_file = f"uploads/{filename}"
         data = get_presigned_url(
             settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"), link_file
         )

@@ -26,7 +26,7 @@ class TranformerServiceClient:
             return cached
 
         # Fetch from direct endpoint
-        endpoint = f"{self.base_url}/api/device-models/{device_model_id}/"
+        endpoint = f"{self.base_url}/api/device-models/{device_model_id}"
         try:
             response = requests.get(
                 endpoint,

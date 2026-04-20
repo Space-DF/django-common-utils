@@ -38,7 +38,6 @@ class GoogleLoginView(generics.CreateAPIView):
 
 
 class GoogleLoginCallbackView(APIView):
-
     def get(self, request):
         code = request.GET.get("code")
         state = request.GET.get("state")

@@ -82,7 +82,11 @@ def handle_access_token(access_token, provider: Literal["GOOGLE"]):
     if is_created:
         root_user.first_name = given_name
         root_user.last_name = family_name
+        root_user.set_unusable_password()
         root_user.save()
+    elif not root_user.password:
+        root_user.set_unusable_password()
+        root_user.save(update_fields=["password"])
 
     if provider.lower() not in root_user.providers:
         root_user.providers.append(provider.lower())

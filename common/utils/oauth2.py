@@ -1,5 +1,5 @@
 import urllib.parse
-from operator import itemgetter
+
 from typing import Literal
 
 import requests
@@ -73,9 +73,9 @@ def handle_access_token(access_token, provider: Literal["GOOGLE"]):
     response = requests.post(url=info_url, headers=headers, timeout=10)
     response.raise_for_status()
     user_info_dict = response.json()
-    given_name, family_name, email = itemgetter("given_name", "family_name", "email")(
-        user_info_dict
-    )
+    given_name = user_info_dict.get("given_name", "")
+    family_name = user_info_dict.get("family_name", "")
+    email = user_info_dict["email"]
     root_user, is_created = User.objects.get_or_create(
         email=email,
     )

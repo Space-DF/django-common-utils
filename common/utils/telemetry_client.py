@@ -203,6 +203,65 @@ class TelemetryServiceClient:
             logger.error(f"Error fetching widget data for entity {entity_id}: {str(e)}")
             raise
 
+    def get_entities(
+        self,
+        device_id: str,
+        organization_slug: str,
+        space_slug: str,
+        limit: int = 50,
+    ) -> list[dict]:
+        """
+        Fetch entities for a specific space from the telemetry service
+        """
+        endpoint = f"{self.base_url}/api/telemetry/v1/entities"
+        params = {"space_slug": space_slug, "limit": limit}
+
+        if device_id:
+            params["device_id"] = device_id
+
+        try:
+            headers = {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "X-Organization": organization_slug,
+                "X-Space": space_slug,
+            }
+
+            results: list[dict] = []
+            next_url: str | None = endpoint
+            next_params: dict | None = params
+
+            while next_url:
+                response = requests.get(
+                    next_url,
+                    params=next_params,
+                    timeout=self.timeout,
+                    headers=headers,
+                )
+
+                logger.info(f"Entities response status: {response.status_code}")
+
+                if response.status_code == 404:
+                    logger.warning(f"404 - No entities found for space {space_slug}")
+                    return []
+
+                response.raise_for_status()
+
+                data = response.json()
+                page_results = data.get("results") or []
+                if not isinstance(page_results, list):
+                    page_results = []
+
+                results.extend(page_results)
+                next_url = data.get("next")
+                next_params = None
+
+            return results
+
+        except RequestException as e:
+            logger.error(f"Error fetching entities for space {space_slug}: {str(e)}")
+            raise
+
     def get_device_properties(
         self,
         device_id: str,

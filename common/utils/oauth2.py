@@ -1,5 +1,4 @@
 import urllib.parse
-
 from typing import Literal
 
 import requests

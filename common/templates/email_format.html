@@ -1,10 +1,10 @@
 {% extends "base.html" %} {% block title %}Invitation Email{% endblock %} {% block content %}
 <div class="illustration">
-  <img src="{{ host }}/static/images/invitation.png" />
+  <img src="{{ host }}/static/images/auth/invitation.png" />
 </div>
 <div style="margin-bottom: 30px">
   <h1>New Invitation</h1>
-  <p style="text-align: start">Hello,</p>
+  <p style="text-align: start">Hello{% if receiver_name %} {{receiver_name}}{% endif %},</p>
   <p style="text-align: start">
     <b>{{sender_name}}</b> has invited you to join the space
     <b>{{space_name}}</b> on SpaceDF Platform.<br />By joining, you’ll get

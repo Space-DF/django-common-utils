@@ -3,7 +3,6 @@ import uuid
 from urllib.parse import unquote, urlsplit
 
 import boto3
-from botocore.exceptions import ClientError
 
 client = boto3.client("s3")
 
@@ -45,7 +44,7 @@ def get_presigned_url(bucket_name, link_file, expiration=3600):
         return None
 
 
-def normalize_s3_key(link_file: str, prefix: str = "uploads/") -> str:
+def normalize_s3_key(link_file: str, prefix: str = "") -> str:
     """
     Normalize S3 key from raw key or full URL.
     """
@@ -82,6 +81,6 @@ def delete_file(bucket_name: str, link_file: str) -> bool:
         logging.info(f"Deleted S3 object: bucket={bucket_name}, key={key}")
         return True
 
-    except ClientError as e:
-        logging.error(f"Delete failed: {str(e)}")
+    except Exception as e:
+        logging.error(f"Delete failed: {e}")
         return False

@@ -1,6 +1,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 
 import requests
 from django.conf import settings
@@ -207,14 +208,13 @@ class TelemetryServiceClient:
         self,
         device_id: str,
         organization_slug: str,
-        space_slug: str,
         limit: int = 50,
     ) -> list[dict]:
         """
-        Fetch entities for a specific space from the telemetry service
+        Fetch entities for a device from the telemetry service
         """
         endpoint = f"{self.base_url}/api/telemetry/v1/entities"
-        params = {"space_slug": space_slug, "limit": limit}
+        params = {"limit": limit}
 
         if device_id:
             params["device_id"] = device_id
@@ -224,12 +224,11 @@ class TelemetryServiceClient:
                 "Content-Type": "application/json",
                 "Accept": "application/json",
                 "X-Organization": organization_slug,
-                "X-Space": space_slug,
             }
 
             results: list[dict] = []
-            next_url: str | None = endpoint
-            next_params: dict | None = params
+            next_url: Optional[str] = endpoint
+            next_params: Optional[dict] = params
 
             while next_url:
                 response = requests.get(
@@ -242,7 +241,9 @@ class TelemetryServiceClient:
                 logger.info(f"Entities response status: {response.status_code}")
 
                 if response.status_code == 404:
-                    logger.warning(f"404 - No entities found for space {space_slug}")
+                    logger.warning(
+                        f"404 - No entities found for device {device_id}"
+                    )
                     return []
 
                 response.raise_for_status()
@@ -259,14 +260,15 @@ class TelemetryServiceClient:
             return results
 
         except RequestException as e:
-            logger.error(f"Error fetching entities for space {space_slug}: {str(e)}")
+            logger.error(
+                f"Error fetching entities for device {device_id}: {str(e)}"
+            )
             raise
 
     def get_device_properties(
         self,
         device_id: str,
         organization_slug: str,
-        space_slug: str,
     ) -> dict:
         """
         Fetch all device properties (all entities data) from telemetry service
@@ -274,10 +276,7 @@ class TelemetryServiceClient:
         """
         endpoint = f"{self.base_url}/api/telemetry/v1/data/latest"
 
-        params = {
-            "device_id": device_id,
-            "space_slug": space_slug,
-        }
+        params = {"device_id": device_id}
 
         try:
             response = requests.get(

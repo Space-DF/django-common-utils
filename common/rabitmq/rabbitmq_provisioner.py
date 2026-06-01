@@ -383,6 +383,7 @@ class RabbitMQProvisioner:
         exchange_name = f"{org_slug}.exchange"
         transformer_queue = f"{org_slug}.transformer.queue"
         transformed_data_queue = f"{org_slug}.transformed.data.queue"
+        telemetry_queue = f"{org_slug}.telemetry.queue"
 
         # Use shared default user from settings
         shared_username = settings.RABBITMQ_DEFAULT_USER
@@ -414,6 +415,7 @@ class RabbitMQProvisioner:
             # Create queues
             self.create_queue(vhost_name, transformer_queue)
             self.create_queue(vhost_name, transformed_data_queue)
+            self.create_queue(vhost_name, telemetry_queue)
 
             # Bind amq.topic -> org exchange (for incoming device data)
             self.create_exchange_binding(
@@ -426,30 +428,6 @@ class RabbitMQProvisioner:
                 exchange_name,
                 transformer_queue,
                 f"tenant.{org_slug}.device.data",
-            )
-
-            # Bind org exchange -> transformed data queue
-            self.create_binding(
-                vhost_name,
-                exchange_name,
-                transformed_data_queue,
-                f"tenant.{org_slug}.transformed.device.location",
-            )
-
-            # Bind org exchange -> transformed data queue for telemetry
-            self.create_binding(
-                vhost_name,
-                exchange_name,
-                transformed_data_queue,
-                f"tenant.{org_slug}.space.*.entity.*.telemetry",
-            )
-
-            # Bind org exchange -> transformed data queue for device events
-            self.create_binding(
-                vhost_name,
-                exchange_name,
-                transformed_data_queue,
-                f"tenant.{org_slug}.space.*.device.*.event",
             )
 
             logger.info(f"Successfully provisioned tenant: {org_slug}")
@@ -496,6 +474,7 @@ class RabbitMQProvisioner:
                 "exchange": exchange_name,
                 "transformer_queue": transformer_queue,
                 "transformed_queue": transformed_data_queue,
+                "telemetry_queue": telemetry_queue,
                 "org_id": org_id,
                 "org_slug": org_slug,
                 "status": "provisioned",
@@ -525,10 +504,11 @@ class RabbitMQProvisioner:
             exchange_name = f"{org_slug}.exchange"
             transformer_queue = f"{org_slug}.transformer.queue"
             transformed_data_queue = f"{org_slug}.transformed.data.queue"
+            telemetry_queue = f"{org_slug}.telemetry.queue"
             encoded_vhost = self._encode(vhost_name)
 
             # Delete queues
-            for queue_name in [transformer_queue, transformed_data_queue]:
+            for queue_name in [transformer_queue, transformed_data_queue, telemetry_queue]:
                 try:
                     encoded_queue = self._encode(queue_name)
                     response = self.session.delete(

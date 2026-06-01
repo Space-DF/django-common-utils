@@ -241,9 +241,7 @@ class TelemetryServiceClient:
                 logger.info(f"Entities response status: {response.status_code}")
 
                 if response.status_code == 404:
-                    logger.warning(
-                        f"404 - No entities found for device {device_id}"
-                    )
+                    logger.warning(f"404 - No entities found for device {device_id}")
                     return []
 
                 response.raise_for_status()
@@ -260,9 +258,7 @@ class TelemetryServiceClient:
             return results
 
         except RequestException as e:
-            logger.error(
-                f"Error fetching entities for device {device_id}: {str(e)}"
-            )
+            logger.error(f"Error fetching entities for device {device_id}: {str(e)}")
             raise
 
     def get_device_properties(

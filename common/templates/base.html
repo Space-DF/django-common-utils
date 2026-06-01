@@ -9,15 +9,15 @@
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
-      background-color: #fff;
-      color: #1c1c1c;
+      color: #667085;
     }
 
-    .container {
+    .content{
       max-width: 590px;
       margin: 0 auto;
       padding: 40px 0px 10px;
       text-align: center;
+      padding: 25px 25px;
     }
 
     a {
@@ -45,8 +45,6 @@
     }
 
     .btn {
-      background-color: #1c1c28;
-      color: white !important;
       padding: 12px 24px;
       border-radius: 8px;
       display: inline-block;
@@ -55,7 +53,6 @@
     }
 
     .footer {
-      background-color: #1c1c28;
       color: #fff;
       padding: 20px 5px 10px;
       border-radius: 16px;
@@ -72,16 +69,6 @@
       font-size: 18px;
     }
 
-    .social-icons {
-      display: flex;
-    }
-
-    .social-icons a {
-      margin: 0 0 0 15px;
-      color: #fff;
-      font-size: 20px;
-    }
-
     .footer-top {
       display: flex;
     }
@@ -95,7 +82,7 @@
 
     .round {
       display: inline-block; 
-      background: #2D2F30; 
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 50%; 
       width: 40px; 
       height: 40px; 
@@ -120,7 +107,6 @@
     .btn-invite {
         display: inline-block;
         color: white !important;
-        background-color: #1c1c28;
         padding: 15px 20px 15px 20px;
         border-radius: 10px;
         text-decoration: none;
@@ -136,58 +122,65 @@
     }
   </style>
 </head>
-<body>
-  <div class="container">
-    <div class="logo">
-      <img src="{{ host }}/static/images/branding/logo_black.png" width="200" height="50"/>
+<body >
+  <div class="content" style="background-color: {{ background_color }};">
+    <div class="container">
+      <div class="logo">
+        <img src="{% if active_brand_header_logo %}{{ active_brand_header_logo }}{% else %}{{ host }}/static/images/branding/logo_black.png{% endif %}" width="200" height="50" alt="Logo" />
+      </div>
+
+      {% block content %}{% endblock %}
+
     </div>
-
-    {% block content %}{% endblock %}
-
-  </div>
-  <div class="footer">
-    
-    <table class="footer-table" width="100%" cellpadding="0" cellspacing="0" role="presentation">
-      <tr>
-        <td align="left">
-          <img src="{{ host }}/static/images/branding/logo_white.png" width="180" height="50" alt="Logo" />
-        </td>
-        <td align="right">
-          <table cellpadding="0" cellspacing="0" role="presentation">
-            <tr>
-              <td>
-                <a href="#" class="round">
-                  <img src="{{ host }}/static/images/social/in.png" width="24" height="24" alt="LinkedIn" style="margin-top: 8px;" />
-                </a>
-              </td>
-              <td>
-                <a href="#" class="round">
-                  <img src="{{ host }}/static/images/social/face_book.png" width="24" height="24" alt="Facebook" style="margin-top: 8px;" />
-                </a>
-              </td>
-              <td>
-                <a href="#" class="round">
-                  <img src="{{ host }}/static/images/social/instagram.png" width="24" height="24" alt="Instagram" style="margin-top: 8px;" />
-                </a>
-              </td>
-              <td>
-                <a href="#" class="round">
-                  <img src="{{ host }}/static/images/social/tik_tok.png" width="24" height="24" alt="TikTok" style="margin-top: 8px;" />
-                </a>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <p>©2025 Digital Fortress. All rights reserved.</p>
-        </td>
-        <td>
-          <p style="display: block; float: right; "><a href="#">Privacy Policy</a></p>
-        </td>
-      </tr>
-    </table>
+    <div class="footer" style="background-color: {{ primary_color }};">
+      
+      <table class="footer-table" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+        <tr>
+          <td align="left">
+            <img src="{% if active_brand_footer_logo %}{{ active_brand_footer_logo }}{% else %}{{ host }}/static/images/branding/logo_white.png{% endif %}" width="180" height="50" alt="Logo" />
+          </td>
+          <td align="right">
+            <table cellpadding="0" cellspacing="0" role="presentation">
+              <tr>
+                {% if show_linkedin != False %}
+                <td>
+                  <a class="round"href="{{ linkedin_url }}" class="round">
+                    <img src="{% if contrast_primary_color == '#000000' %}{{ host }}/static/images/social/linkedin_black.png{% else %}{{ host }}/static/images/social/linkedin_white.png{% endif %}" width="24" height="24" alt="LinkedIn" style="margin-top: 8px;" />
+                  </a>
+                </td>
+                {% endif %}
+                {% if show_facebook != False %}
+                <td>
+                  <a class="round" href="{{ facebook_url }}" class="round">
+                    <img src="{% if contrast_primary_color == '#000000' %}{{ host }}/static/images/social/facebook_black.png{% else %}{{ host }}/static/images/social/facebook_white.png{% endif %}" width="24" height="24" alt="Facebook" style="margin-top: 8px;" />
+                  </a>
+                </td>
+                {% endif %}
+                {% if show_instagram != False %}
+                <td>
+                  <a class="round" href="{{ instagram_url }}" class="round">
+                    <img src="{% if contrast_primary_color == '#000000' %}{{ host }}/static/images/social/instagram_black.png{% else %}{{ host }}/static/images/social/instagram_white.png{% endif %}" width="24" height="24" alt="Instagram" style="margin-top: 8px;" />
+                  </a>
+                </td>
+                {% endif %}
+                {% if show_tiktok != False %}
+                <td>
+                  <a class="round" href="{{ tiktok_url }}">
+                    <img src="{% if contrast_primary_color == '#000000' %}{{ host }}/static/images/social/tiktok_black.png{% else %}{{ host }}/static/images/social/tiktok_white.png{% endif %}" width="24" height="24" alt="TikTok" style="margin-top: 8px;" />
+                  </a>
+                </td>
+                {% endif %}
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p style="display: block; float: left; color: {{ contrast_primary_color }};">{{ email_footer }}</p>
+          </td>
+        </tr>
+      </table>
+    </div>
   </div>
 </body>
 </html>

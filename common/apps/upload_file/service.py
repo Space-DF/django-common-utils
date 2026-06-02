@@ -7,19 +7,30 @@ import boto3
 client = boto3.client("s3")
 
 
-def put_presigned_url(bucket_name, expiration=3600):
+def put_presigned_url(bucket_name, content_type, expiration=3600):
     """
     return presigned URL and file name
     """
     try:
         file_name = uuid.uuid4()
+        params = {
+            "Bucket": bucket_name,
+            "Key": f"uploads/{file_name}",
+            "ContentType": content_type,
+        }
+
         presigned_url = client.generate_presigned_url(
             ClientMethod="put_object",
-            Params={"Bucket": bucket_name, "Key": f"uploads/{file_name}"},
+            Params=params,
             ExpiresIn=expiration,
             HttpMethod="PUT",
         )
-        return {"file_name": file_name, "presigned_url": presigned_url}
+        data = {
+            "file_name": file_name,
+            "presigned_url": presigned_url,
+            "content_type": content_type,
+        }
+        return data
     except Exception as e:
         logging.error(f"Error: {e}")
         return None

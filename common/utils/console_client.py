@@ -10,7 +10,7 @@ class ConsoleServiceClient:
     """Client for interacting with the Console Service API."""
 
     def __init__(self, base_url: str | None = None):
-        self.base_url = (base_url or "http://console:80/api")
+        self.base_url = base_url or "http://console:80/api"
         self.timeout = 10
 
     def get_custom_emails(
@@ -18,9 +18,7 @@ class ConsoleServiceClient:
         organization_slug: str,
         email_type: str,
     ) -> list[dict]:
-        logger.error(
-            f"Fetching from url api {self.base_url}"
-        )
+        logger.error(f"Fetching from url api {self.base_url}")
         if not self.base_url or not organization_slug:
             return []
 

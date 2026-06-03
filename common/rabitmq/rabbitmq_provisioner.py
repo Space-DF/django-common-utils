@@ -508,11 +508,7 @@ class RabbitMQProvisioner:
             encoded_vhost = self._encode(vhost_name)
 
             # Delete queues
-            for queue_name in [
-                transformer_queue,
-                transformed_data_queue,
-                telemetry_queue,
-            ]:
+            for queue_name in [transformer_queue, transformed_data_queue, telemetry_queue]:
                 try:
                     encoded_queue = self._encode(queue_name)
                     response = self.session.delete(

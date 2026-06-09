@@ -124,9 +124,11 @@
 <body >
   <div class="content" style="background-color: {{ background_color }};">
     <div class="container">
-      <div class="logo">
-        <img src="{% if active_brand_header_logo %}{{ active_brand_header_logo }}{% else %}{{ host }}/static/images/branding/logo_black.png{% endif %}" width="200" height="50" alt="Logo" />
-      </div>
+      {% if show_logo %}
+        <div class="logo">
+          <img src="{% if active_brand_header_logo %}{{ active_brand_header_logo }}{% else %}{{ host }}/static/images/branding/logo_black.png{% endif %}" width="200" height="50" alt="Logo" />
+        </div>
+      {% endif %}
 
       {% block content %}{% endblock %}
 

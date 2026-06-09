@@ -78,8 +78,7 @@ def get_email_context(email_context_data, custom_email):
         {
             "brand_name": _get_value(custom_email, "brand_name") or "SpaceDF",
             "show_logo": _get_value(custom_email, "show_logo", True),
-            "background_image_url": _get_value(custom_email, "url_background_image")
-            or "",
+            "background_image_url": _get_value(custom_email, "url_background_image") or "",
             "sender_from": (_get_value(custom_email, "sender_name") or "The @SpaceDF Team"),
             "brand_logo_dark": logo_dark_url,
             "brand_logo_light": logo_light_url,
@@ -91,29 +90,14 @@ def get_email_context(email_context_data, custom_email):
             ),
             "email_footer": (_get_value(custom_email, "footer_text") or ""),
             "header_image_url": _get_value(custom_email, "url_header_image") or "",
-            "linkedin_url": social_links.get(
-                "linkedin_url",
-                "",
-            ),
+            "linkedin_url": social_links.get("linkedin_url", ""),
             "facebook_url": social_links.get("facebook_url"),
             "instagram_url": social_links.get("instagram_url"),
             "tiktok_url": social_links.get("tiktok_url"),
-            "show_facebook": visibility_flags.get(
-                "show_facebook",
-                True,
-            ),
-            "show_linkedin": visibility_flags.get(
-                "show_linkedin",
-                True,
-            ),
-            "show_instagram": visibility_flags.get(
-                "show_instagram",
-                True,
-            ),
-            "show_tiktok": visibility_flags.get(
-                "show_tiktok",
-                True,
-            ),
+            "show_facebook": visibility_flags.get("show_facebook", True),
+            "show_linkedin": visibility_flags.get("show_linkedin", True),
+            "show_instagram": visibility_flags.get("show_instagram", True),
+            "show_tiktok": visibility_flags.get("show_tiktok", True),
             "primary_color": primary_color,
             "background_color": background_color,
             "contrast_primary_color": contrast_primary_color,

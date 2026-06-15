@@ -78,8 +78,11 @@ def get_email_context(email_context_data, custom_email):
         {
             "brand_name": _get_value(custom_email, "brand_name") or "SpaceDF",
             "show_logo": _get_value(custom_email, "show_logo", True),
-            "background_image_url": _get_value(custom_email, "url_background_image") or "",
-            "sender_from": (_get_value(custom_email, "sender_name") or "The @SpaceDF Team"),
+            "background_image_url": _get_value(custom_email, "url_background_image")
+            or "",
+            "sender_from": (
+                _get_value(custom_email, "sender_name") or "The @SpaceDF Team"
+            ),
             "brand_logo_dark": logo_dark_url,
             "brand_logo_light": logo_light_url,
             "active_brand_header_logo": active_brand_header_logo,

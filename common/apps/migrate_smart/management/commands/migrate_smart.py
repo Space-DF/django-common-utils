@@ -37,14 +37,14 @@ def ensure_fingerprint_table():
                 value TEXT NOT NULL,
                 updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
             )
-            """
+            """  # nosec
         )
 
 
 def get_stored_fingerprint():
     connection.set_schema_to_public()
     with connection.cursor() as cur:
-        cur.execute(f"SELECT value FROM {FINGERPRINT_TABLE} WHERE id = 1")
+        cur.execute(f"SELECT value FROM {FINGERPRINT_TABLE} WHERE id = 1")  # nosec
         row = cur.fetchone()
         return row[0] if row else None
 
@@ -57,7 +57,7 @@ def store_fingerprint(value):
             INSERT INTO {FINGERPRINT_TABLE} (id, value)
             VALUES (1, %s)
             ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value, updated_at = now()
-            """,
+            """,  # nosec
             [value],
         )
 

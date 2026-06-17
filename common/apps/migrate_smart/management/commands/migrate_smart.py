@@ -18,12 +18,7 @@ def compute_migration_fingerprint():
         for filename in sorted(os.listdir(migration_dir)):
             if not filename.endswith(".py") or filename == "__init__.py":
                 continue
-            filepath = os.path.join(migration_dir, filename)
-            if not os.path.isfile(filepath):
-                continue
-            with open(filepath, "rb") as f:
-                hasher.update(f"{app_config.label}/{filename}:".encode())
-                hasher.update(f.read())
+            hasher.update(f"{app_config.label}/{filename}:".encode())
     return hasher.hexdigest()
 
 

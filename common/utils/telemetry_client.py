@@ -203,7 +203,7 @@ class TelemetryServiceClient:
             logger.error(f"Error fetching widget data for entity {entity_id}: {str(e)}")
             raise
 
-    def get_device_entity_properties(
+    def get_entity_properties(
         self,
         device_id: str,
         organization_slug: str,

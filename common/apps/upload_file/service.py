@@ -1,131 +1,109 @@
 import logging
-import os
 import uuid
 from urllib.parse import unquote, urlsplit
 
 import boto3
+from botocore.client import Config
 from django.conf import settings
-from django.utils.text import get_valid_filename
-
-logger = logging.getLogger(__name__)
 
 _s3_client = None
+
+logger = logging.getLogger(__name__)
 
 
 def _get_s3_client():
     global _s3_client
     if _s3_client is None:
-        aws_config = getattr(settings, "AWS_S3", {})
         _s3_client = boto3.client(
             "s3",
-            aws_access_key_id=aws_config.get("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=aws_config.get("AWS_SECRET_ACCESS_KEY"),
-            region_name=aws_config.get("AWS_REGION"),
+            config=Config(
+                signature_version="s3v4",
+                s3={"addressing_style": "path"},
+            ),
+            region_name=settings.AWS_S3.get("AWS_REGION", "ap-southeast-1"),
         )
     return _s3_client
+
+
+def _build_s3_key(visibility, scope, file_name, org_slug=None, user_id=None):
+    unique_name = f"{uuid.uuid4().hex}_{file_name}"
+
+    if scope == "root_user":
+        return f"{visibility}/root_users/{user_id}/{unique_name}"
+
+    if scope == "org_user":
+        return f"{visibility}/organizations/{org_slug}/users/{user_id}/{unique_name}"
+
+    return f"{visibility}/organizations/{org_slug}/{unique_name}"
 
 
 def put_presigned_url(
     bucket_name,
     file_name,
     content_type,
-    org_slug,
-    visibility="private",
+    visibility,
+    scope,
+    org_slug=None,
+    user_id=None,
     expiration=3600,
 ):
-    """
-    Generate a presigned URL for PUT upload to S3.
-
-    Args:
-        bucket_name: S3 bucket name.
-        file_name: Original file name (e.g. "avatar.png").
-        content_type: MIME type (e.g. "image/png").
-        orgSlug: Organization slug for namespacing files.
-        visibility: "public" or "private".
-        expiration: URL expiration in seconds.
-
-    Returns:
-        dict with "presigned_url" and "file_path", or None on failure.
-    """
-    client = _get_s3_client()
-
-    clean_name = get_valid_filename(os.path.basename(file_name))
-    unique_file_name = f"{uuid.uuid4()}_{clean_name}"
-    key = f"{visibility}/organizations/{org_slug}/{unique_file_name}"
-
-    params = {
-        "Bucket": bucket_name,
-        "Key": key,
-        "ContentType": content_type,
-    }
-
-    # Note: Setting ACL to "public-read" is not recommended for security reasons.
-    # if visibility == "public":
-    #     params["ACL"] = "public-read"
-
     try:
+        key = _build_s3_key(visibility, scope, file_name, org_slug, user_id)
+        client = _get_s3_client()
+
+        params = {
+            "Bucket": bucket_name,
+            "Key": key,
+            "ContentType": content_type,
+        }
+
         presigned_url = client.generate_presigned_url(
             ClientMethod="put_object",
             Params=params,
             ExpiresIn=expiration,
             HttpMethod="PUT",
         )
-        return {"presigned_url": presigned_url, "file_path": key}
+        return {"key": key, "presigned_url": presigned_url}
     except Exception as e:
-        logger.error(f"Failed to generate PUT presigned URL: {e}")
+        logger.error(f"Error generating presigned PUT URL: {e}")
         return None
 
 
-def get_public_url(bucket_name, file_path):
-    """
-    Build a permanent public URL for a public S3 object.
+def get_file_url(bucket_name, key, expiration=3600):
+    if not key:
+        return None
 
-    Args:
-        bucket_name: S3 bucket name.
-        file_path: Full S3 key starting with 'public/'.
+    key = normalize_s3_key(key)
 
-    Returns:
-        Permanent public URL string.
-    """
-    aws_config = getattr(settings, "AWS_S3", {})
-    region = aws_config.get("AWS_REGION", "us-east-1")
-    key = normalize_s3_key(file_path)
-    return f"https://{bucket_name}.s3.{region}.amazonaws.com/{key}"
+    if not key:
+        return None
+
+    if key.startswith("public/"):
+        region = (
+            settings.AWS_REGION if hasattr(settings, "AWS_REGION") else "ap-southeast-1"
+        )
+        return f"https://s3.{region}.amazonaws.com/{bucket_name}/{key}"
+
+    return get_presigned_url(bucket_name, key, expiration)
 
 
-def get_presigned_url(bucket_name, file_path, expiration=3600):
-    """
-    Generate a presigned GET URL for an S3 object.
-
-    Args:
-        bucket_name: S3 bucket name.
-        file_path: Full S3 key (e.g. "public/uuid_avatar.png").
-        expiration: URL expiration in seconds.
-
-    Returns:
-        Presigned URL string, or None on failure.
-    """
-    client = _get_s3_client()
-
-    key = normalize_s3_key(file_path)
-
+def get_presigned_url(bucket_name, link_file, expiration=3600):
     try:
-        return client.generate_presigned_url(
+        client = _get_s3_client()
+        url_image = client.generate_presigned_url(
             ClientMethod="get_object",
-            Params={"Bucket": bucket_name, "Key": key},
+            Params={"Bucket": bucket_name, "Key": link_file},
             ExpiresIn=expiration,
             HttpMethod="GET",
         )
+        return url_image
     except Exception as e:
         logger.error(f"Failed to generate GET presigned URL: {e}")
         return None
 
 
 def normalize_s3_key(link_file: str, prefix: str = "") -> str:
-    """
-    Normalize an S3 key from a raw key or full URL.
-    """
-    key = (link_file or "").strip()
+    key = link_file.strip()
 
     parsed = urlsplit(key)
     if parsed.scheme or parsed.netloc:
@@ -140,9 +118,6 @@ def normalize_s3_key(link_file: str, prefix: str = "") -> str:
 
 
 def delete_file(bucket_name: str, link_file: str) -> bool:
-    """
-    Delete file from S3 bucket.
-    """
     if not bucket_name or not link_file:
         logger.error("Delete failed: missing bucket name or file key")
         return False

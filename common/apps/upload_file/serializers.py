@@ -17,3 +17,8 @@ class PresignedUploadSerializer(serializers.Serializer):
         default="private",
         help_text="Storage visibility: public or private",
     )
+    scope = serializers.ChoiceField(
+        choices=["org", "org_user", "root_user"],
+        default="org",
+        help_text="Upload scope: org, org_user, or root_user",
+    )

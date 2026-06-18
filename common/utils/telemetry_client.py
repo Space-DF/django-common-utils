@@ -1,7 +1,6 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 import requests
 from django.conf import settings
@@ -204,74 +203,15 @@ class TelemetryServiceClient:
             logger.error(f"Error fetching widget data for entity {entity_id}: {str(e)}")
             raise
 
-    def get_entities(
+    def get_entity_properties(
         self,
         device_id: str,
         organization_slug: str,
-        limit: int = 50,
     ) -> list[dict]:
         """
-        Fetch entities for a device from the telemetry service
+        Fetch device entities with latest values from telemetry service in one call
         """
-        endpoint = f"{self.base_url}/api/telemetry/v1/entities"
-        params = {"limit": limit}
-
-        if device_id:
-            params["device_id"] = device_id
-
-        try:
-            headers = {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                "X-Organization": organization_slug,
-            }
-
-            results: list[dict] = []
-            next_url: Optional[str] = endpoint
-            next_params: Optional[dict] = params
-
-            while next_url:
-                response = requests.get(
-                    next_url,
-                    params=next_params,
-                    timeout=self.timeout,
-                    headers=headers,
-                )
-
-                logger.info(f"Entities response status: {response.status_code}")
-
-                if response.status_code == 404:
-                    logger.warning(f"404 - No entities found for device {device_id}")
-                    return []
-
-                response.raise_for_status()
-
-                data = response.json()
-                page_results = data.get("results") or []
-                if not isinstance(page_results, list):
-                    page_results = []
-
-                results.extend(page_results)
-                next_url = data.get("next")
-                next_params = None
-
-            return results
-
-        except RequestException as e:
-            logger.error(f"Error fetching entities for device {device_id}: {str(e)}")
-            raise
-
-    def get_device_properties(
-        self,
-        device_id: str,
-        organization_slug: str,
-    ) -> dict:
-        """
-        Fetch all device properties (all entities data) from telemetry service
-
-        """
-        endpoint = f"{self.base_url}/api/telemetry/v1/data/latest"
-
+        endpoint = f"{self.base_url}/api/telemetry/v1/data/entity-properties"
         params = {"device_id": device_id}
 
         try:
@@ -286,20 +226,24 @@ class TelemetryServiceClient:
                 },
             )
 
-            logger.info(f"Device properties response status: {response.status_code}")
+            logger.info(
+                f"Device entity properties response status: {response.status_code}"
+            )
 
             if response.status_code == 404:
                 logger.warning(
-                    f"404 - No device properties found for device {device_id}"
+                    f"404 - No device entity properties found for device {device_id}"
                 )
-                return {}
+                return []
 
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+
+            return data if isinstance(data, list) else []
 
         except RequestException as e:
             logger.error(
-                f"Error fetching device properties for device {device_id}: {str(e)}"
+                f"Error fetching device entity properties for device {device_id}: {str(e)}"
             )
             raise
 

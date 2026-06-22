@@ -42,6 +42,7 @@
 
     p {
       font-size: 16px;
+      margin: 10px 0;
     }
 
     .btn {
@@ -126,7 +127,7 @@
     <div class="container">
       {% if show_logo %}
         <div class="logo">
-          <img src="{% if active_brand_header_logo %}{{ active_brand_header_logo }}{% else %}{{ host }}/static/images/branding/logo_black.png{% endif %}" width="200" height="50" alt="Logo" />
+          <img src="{% if active_brand_header_logo %}{{ active_brand_header_logo }}{% else %}{{ host }}/static/images/branding/logo_black.png{% endif %}" alt="Logo"  style="max-width:200px; max-height:50px;"/>
         </div>
       {% endif %}
 
@@ -138,7 +139,7 @@
       <table class="footer-table" width="100%" cellpadding="0" cellspacing="0" role="presentation">
         <tr>
           <td align="left">
-            <img src="{% if active_brand_footer_logo %}{{ active_brand_footer_logo }}{% else %}{{ host }}/static/images/branding/logo_white.png{% endif %}" width="180" height="50" alt="Logo" />
+            <img src="{% if active_brand_footer_logo %}{{ active_brand_footer_logo }}{% else %}{{ host }}/static/images/branding/logo_white.png{% endif %}" alt="Logo" style="max-width:180px; max-height:50px;"/>
           </td>
           <td align="right">
             <table cellpadding="0" cellspacing="0" role="presentation">

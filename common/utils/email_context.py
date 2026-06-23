@@ -10,9 +10,6 @@ def _get_contrast_color(color):
     if len(value) == 4:
         value = "#" + "".join(char * 2 for char in value[1:])
 
-    if len(value) != 7:
-        value = "#FFFFFF"
-
     try:
         red = int(value[1:3], 16)
         green = int(value[3:5], 16)
@@ -58,6 +55,7 @@ def get_email_context(email_context_data, custom_email):
     visibility_flags = _get_visibility_flags(custom_email)
     social_links = _get_social_links(custom_email)
     background_color = theme_colors.get("background_color") or "#FFFFFF"
+    contrast_background_color = _get_contrast_color(background_color)
     primary_color = theme_colors.get("primary_color") or "#1c1c28"
     contrast_primary_color = _get_contrast_color(primary_color)
     logo_light_url = _get_value(custom_email, "brand_logo_light") or ""
@@ -104,6 +102,7 @@ def get_email_context(email_context_data, custom_email):
             "primary_color": primary_color,
             "background_color": background_color,
             "contrast_primary_color": contrast_primary_color,
+            "contrast_background_color": contrast_background_color,
         }
     )
     return email_context_data

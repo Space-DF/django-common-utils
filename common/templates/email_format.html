@@ -7,7 +7,7 @@
   </div>
   {% endif %}
   <div style="margin-bottom: 30px">
-    <h1 style="color: {{ contrast_primary_color }};">New Invitation</h1>
+    <h1 style="color: {{ contrast_background_color }};">New Invitation</h1>
     <p style="text-align: start">
       Hello{% if receiver_name %} {{ receiver_name }}{% else %} there{% endif %},
     </p>
@@ -29,15 +29,14 @@
       </a>
     </p>
     <p style="text-align: start">
-      Note: This invitation will expire in <b>7 days</b>.
+      Note: This invitation will expire in 7 days.
     </p>
     <p style="text-align: start">
       Welcome you on board and look forward to working with you!
     </p>
     <p style="text-align: start"><b>{{ sender_from }}</b></p>
   </div>
-
-  <p>
+  <p style="text-align: start">
     If you did not initiate this request, please contact us at
     <a href="mailto:{{ sender_email }}" style="color: {{ primary_color }};">{{ sender_email }}</a>
   </p>

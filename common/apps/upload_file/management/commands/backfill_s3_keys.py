@@ -1,11 +1,12 @@
 import logging
+import os
 
 from django.apps import apps
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import connection
 
-from common.apps.upload_file.service import _get_s3_client
+from common.apps.upload_file.service import _find_s3_key, _get_s3_client
 
 logger = logging.getLogger(__name__)
 
@@ -18,19 +19,22 @@ def is_old_key(value):
 
 
 def copy_s3_object(old_key, new_key):
-    try:
-        s3.head_object(Bucket=BUCKET, Key=old_key)
-    except Exception:
+    found = _find_s3_key(BUCKET, old_key)
+    if not found:
         logger.warning(f"Source not found, skipping: {old_key}")
-        return False
+        return None
+
+    ext = os.path.splitext(found)[1]
+    if ext:
+        new_key = f"{new_key}{ext}"
 
     s3.copy_object(
         Bucket=BUCKET,
         Key=new_key,
-        CopySource={"Bucket": BUCKET, "Key": old_key},
+        CopySource={"Bucket": BUCKET, "Key": found},
     )
-    logger.info(f"Copied: {old_key} → {new_key}")
-    return True
+    logger.info(f"Copied: {found} → {new_key}")
+    return new_key
 
 
 def backfill_tenant_models(org_slug):
@@ -43,8 +47,9 @@ def backfill_tenant_models(org_slug):
                 continue
             old_key = f"uploads/{obj.avatar}"
             new_key = f"private/organizations/{schema}/users/{obj.id}/{obj.avatar}"
-            if copy_s3_object(old_key, new_key):
-                model.objects.filter(pk=obj.pk).update(avatar=new_key)
+            result = copy_s3_object(old_key, new_key)
+            if result:
+                model.objects.filter(pk=obj.pk).update(avatar=result)
 
     if apps.is_installed("common.apps.space"):
         model = apps.get_model("space", "Space")
@@ -53,8 +58,9 @@ def backfill_tenant_models(org_slug):
                 continue
             old_key = f"uploads/{obj.logo}"
             new_key = f"public/organizations/{schema}/{obj.logo}"
-            if copy_s3_object(old_key, new_key):
-                model.objects.filter(pk=obj.pk).update(logo=new_key)
+            result = copy_s3_object(old_key, new_key)
+            if result:
+                model.objects.filter(pk=obj.pk).update(logo=result)
 
     if apps.is_installed("apps.building"):
         for model_name in ["Building", "Floor", "Area"]:
@@ -66,8 +72,9 @@ def backfill_tenant_models(org_slug):
                     continue
                 old_key = f"uploads/{obj.scene_asset}"
                 new_key = f"private/organizations/{schema}/{obj.scene_asset}"
-                if copy_s3_object(old_key, new_key):
-                    model.objects.filter(pk=obj.pk).update(scene_asset=new_key)
+                result = copy_s3_object(old_key, new_key)
+                if result:
+                    model.objects.filter(pk=obj.pk).update(scene_asset=result)
 
     if apps.is_installed("apps.facility"):
         model = apps.get_model("facility", "Facility")
@@ -78,8 +85,9 @@ def backfill_tenant_models(org_slug):
                 continue
             old_key = f"uploads/{obj.scene_asset}"
             new_key = f"private/organizations/{schema}/{obj.scene_asset}"
-            if copy_s3_object(old_key, new_key):
-                model.objects.filter(pk=obj.pk).update(scene_asset=new_key)
+            result = copy_s3_object(old_key, new_key)
+            if result:
+                model.objects.filter(pk=obj.pk).update(scene_asset=result)
 
 
 def backfill_console_models():
@@ -91,8 +99,9 @@ def backfill_console_models():
                     continue
                 old_key = f"uploads/{obj.avatar}"
                 new_key = f"private/root_users/{obj.id}/{obj.avatar}"
-                if copy_s3_object(old_key, new_key):
-                    model.objects.filter(pk=obj.pk).update(avatar=new_key)
+                result = copy_s3_object(old_key, new_key)
+                if result:
+                    model.objects.filter(pk=obj.pk).update(avatar=result)
         except LookupError:
             pass
 
@@ -104,8 +113,9 @@ def backfill_console_models():
                     continue
                 old_key = f"uploads/{obj.logo}"
                 new_key = f"public/organizations/{obj.slug_name}/{obj.logo}"
-                if copy_s3_object(old_key, new_key):
-                    model.objects.filter(pk=obj.pk).update(logo=new_key)
+                result = copy_s3_object(old_key, new_key)
+                if result:
+                    model.objects.filter(pk=obj.pk).update(logo=result)
         except LookupError:
             pass
 
@@ -118,8 +128,9 @@ def backfill_console_models():
                 org_slug = obj.setting.organization.slug_name
                 old_key = f"uploads/{obj.logo}"
                 new_key = f"public/organizations/{org_slug}/{obj.logo}"
-                if copy_s3_object(old_key, new_key):
-                    model.objects.filter(pk=obj.pk).update(logo=new_key)
+                result = copy_s3_object(old_key, new_key)
+                if result:
+                    model.objects.filter(pk=obj.pk).update(logo=result)
 
             for obj in model.objects.exclude(favicon="").exclude(favicon__isnull=True):
                 if not is_old_key(obj.favicon):
@@ -127,8 +138,9 @@ def backfill_console_models():
                 org_slug = obj.setting.organization.slug_name
                 old_key = f"uploads/{obj.favicon}"
                 new_key = f"public/organizations/{org_slug}/{obj.favicon}"
-                if copy_s3_object(old_key, new_key):
-                    model.objects.filter(pk=obj.pk).update(favicon=new_key)
+                result = copy_s3_object(old_key, new_key)
+                if result:
+                    model.objects.filter(pk=obj.pk).update(favicon=result)
         except LookupError:
             pass
 
@@ -143,8 +155,9 @@ def backfill_console_models():
                 org_slug = obj.organization.slug_name
                 old_key = f"uploads/{obj.background_image}"
                 new_key = f"public/organizations/{org_slug}/{obj.background_image}"
-                if copy_s3_object(old_key, new_key):
-                    model.objects.filter(pk=obj.pk).update(background_image=new_key)
+                result = copy_s3_object(old_key, new_key)
+                if result:
+                    model.objects.filter(pk=obj.pk).update(background_image=result)
         except LookupError:
             pass
 
@@ -159,8 +172,9 @@ def backfill_console_models():
                 org_slug = obj.organization.slug_name
                 old_key = f"uploads/{obj.header_image}"
                 new_key = f"public/organizations/{org_slug}/{obj.header_image}"
-                if copy_s3_object(old_key, new_key):
-                    model.objects.filter(pk=obj.pk).update(header_image=new_key)
+                result = copy_s3_object(old_key, new_key)
+                if result:
+                    model.objects.filter(pk=obj.pk).update(header_image=result)
         except LookupError:
             pass
 

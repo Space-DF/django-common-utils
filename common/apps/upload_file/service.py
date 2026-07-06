@@ -25,6 +25,19 @@ def _get_s3_client():
     return _s3_client
 
 
+def _find_s3_key(bucket_name, base_key):
+    _extensions = ["", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".glb", ".gltf"]
+    client = _get_s3_client()
+    for ext in _extensions:
+        try_key = f"{base_key}{ext}"
+        try:
+            client.head_object(Bucket=bucket_name, Key=try_key)
+            return try_key
+        except Exception:
+            continue
+    return None
+
+
 def _build_s3_key(visibility, scope, file_name, org_slug=None, user_id=None):
     unique_name = f"{uuid.uuid4().hex}_{file_name}"
 
@@ -83,6 +96,11 @@ def get_file_url(bucket_name, key, expiration=3600):
             settings.AWS_REGION if hasattr(settings, "AWS_REGION") else "ap-southeast-1"
         )
         return f"https://s3.{region}.amazonaws.com/{bucket_name}/{key}"
+
+    if not key.startswith(("public/", "private/")):
+        found = _find_s3_key(bucket_name, f"uploads/{key}")
+        if found:
+            key = found
 
     return get_presigned_url(bucket_name, key, expiration)
 

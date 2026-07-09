@@ -8,8 +8,6 @@ from rest_framework.response import Response
 
 class UseTenantFromRequestMixin:
     def initial(self, request, *args, **kwargs):
-        super().initial(request, *args, **kwargs)
-
         org_param = request.query_params.get("organization", None)
         if org_param is not None:
             organization = org_param
@@ -32,3 +30,5 @@ class UseTenantFromRequestMixin:
 
         connection.set_tenant(tenant)
         request.tenant = tenant
+
+        super().initial(request, *args, **kwargs)

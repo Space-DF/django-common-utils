@@ -13,6 +13,12 @@ class ConsoleServiceClient:
         self.base_url = base_url or "http://console:80/api"
         self.timeout = 10
 
+    def _headers(self):
+        return {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+
     def get_custom_emails(
         self,
         organization_slug: str,
@@ -45,3 +51,107 @@ class ConsoleServiceClient:
                 exc,
             )
             return []
+
+    def reserve_quota(
+        self,
+        organization_slug: str,
+        feature: str,
+        amount: int = 1,
+    ) -> tuple[bool, str | None]:
+        """Reserve quota for a feature before creating a billable resource.
+
+        Returns ``(reserved, error)``. On network error or missing billing
+        data the reservation is treated as successful (fail-open) so that
+        billing infra problems never block the core product.
+        """
+        endpoint = f"{self.base_url}/billing/internal/quota/reserve"
+        try:
+            response = requests.post(
+                endpoint,
+                json={
+                    "organization": organization_slug,
+                    "feature": feature,
+                    "amount": amount,
+                },
+                headers=self._headers(),
+                timeout=self.timeout,
+            )
+        except RequestException as exc:
+            logger.warning(
+                "reserve_quota HTTP failed for %s/%s: %s — failing open",
+                organization_slug,
+                feature,
+                exc,
+            )
+            return True, None
+
+        if response.status_code == 200:
+            return True, None
+        if response.status_code == 403:
+            try:
+                detail = response.json().get("detail")
+            except ValueError:
+                detail = "Quota exceeded."
+            return False, detail
+        # Unexpected status — fail open with a warning.
+        logger.warning(
+            "reserve_quota unexpected status %s for %s/%s — failing open",
+            response.status_code,
+            organization_slug,
+            feature,
+        )
+        return True, None
+
+    def release_quota(
+        self,
+        organization_slug: str,
+        feature: str,
+        amount: int = 1,
+    ) -> None:
+        """Release previously reserved quota."""
+        endpoint = f"{self.base_url}/billing/internal/quota/release"
+        try:
+            requests.post(
+                endpoint,
+                json={
+                    "organization": organization_slug,
+                    "feature": feature,
+                    "amount": amount,
+                },
+                headers=self._headers(),
+                timeout=self.timeout,
+            )
+        except RequestException as exc:
+            logger.warning(
+                "release_quota HTTP failed for %s/%s: %s",
+                organization_slug,
+                feature,
+                exc,
+            )
+
+    def get_quota(
+        self,
+        organization_slug: str,
+        feature: str,
+    ) -> dict:
+        """Get quota for a feature."""
+        endpoint = f"{self.base_url}/billing/internal/quota/view"
+        try:
+            response = requests.get(
+                endpoint,
+                json={
+                    "organization": organization_slug,
+                    "feature": feature,
+                },
+                headers=self._headers(),
+                timeout=self.timeout,
+            )
+        except RequestException as exc:
+            logger.warning(
+                "get_quota HTTP failed for %s/%s: %s",
+                organization_slug,
+                feature,
+                exc,
+            )
+            return {}
+        return response.json()

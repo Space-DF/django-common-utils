@@ -24,7 +24,6 @@ class ConsoleServiceClient:
         organization_slug: str,
         email_type: str,
     ) -> list[dict]:
-        logger.error(f"Fetching from url api {self.base_url}")
         if not self.base_url or not organization_slug:
             return []
 
@@ -133,11 +132,14 @@ class ConsoleServiceClient:
         self,
         organization_slug: str,
         feature: str,
-    ) -> dict:
-        """Get quota for a feature."""
+    ) -> tuple[dict | None, str | None]:
+        """View current quota usage for a feature.
+
+        Returns ``(data, error)`` matching the reserve/release pattern.
+        """
         endpoint = f"{self.base_url}/billing/internal/quota/view"
         try:
-            response = requests.get(
+            response = requests.post(
                 endpoint,
                 json={
                     "organization": organization_slug,
@@ -146,6 +148,8 @@ class ConsoleServiceClient:
                 headers=self._headers(),
                 timeout=self.timeout,
             )
+            response.raise_for_status()
+            return response.json(), None
         except RequestException as exc:
             logger.warning(
                 "get_quota HTTP failed for %s/%s: %s",
@@ -153,5 +157,7 @@ class ConsoleServiceClient:
                 feature,
                 exc,
             )
-            return {}
-        return response.json()
+            return None, str(exc)
+
+
+console_client = ConsoleServiceClient()

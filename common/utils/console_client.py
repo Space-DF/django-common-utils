@@ -54,10 +54,10 @@ class ConsoleServiceClient:
     def reserve_quota(
         self,
         organization_slug: str,
-        feature: str,
+        feature: str | list[str],
         amount: int = 1,
     ) -> tuple[bool, str | None]:
-        """Reserve quota for a feature before creating a billable resource.
+        """Reserve quota for one or more features.
 
         Returns ``(reserved, error)``. On network error or missing billing
         data the reservation is treated as successful (fail-open) so that
@@ -104,10 +104,10 @@ class ConsoleServiceClient:
     def release_quota(
         self,
         organization_slug: str,
-        feature: str,
+        feature: str | list[str],
         amount: int = 1,
     ) -> None:
-        """Release previously reserved quota."""
+        """Release previously reserved quota for one or more features."""
         endpoint = f"{self.base_url}/billing/internal/quota/release"
         try:
             requests.post(
@@ -131,9 +131,9 @@ class ConsoleServiceClient:
     def get_quota(
         self,
         organization_slug: str,
-        feature: str,
+        feature: str | list[str],
     ) -> tuple[dict | None, str | None]:
-        """View current quota usage for a feature.
+        """View current quota usage for one or more features.
 
         Returns ``(data, error)`` matching the reserve/release pattern.
         """

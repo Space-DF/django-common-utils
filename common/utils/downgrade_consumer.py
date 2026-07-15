@@ -73,14 +73,15 @@ def run_downgrade_consumer(queue_name, callback):
 def _make_handler(callback):
     def _handle(channel, method, _properties, body):
         try:
-            payload = json.loads(body.decode("utf-8"))
+            envelope = json.loads(body.decode("utf-8"))
         except (json.JSONDecodeError, UnicodeDecodeError):
             logger.warning("Invalid downgrade message payload, acking")
             channel.basic_ack(delivery_tag=method.delivery_tag)
             return
 
-        org_slug = payload.get("slug")
-        limits = payload.get("limits", {})
+        inner = envelope.get("payload", {})
+        org_slug = inner.get("slug")
+        limits = inner.get("limits", {})
         try:
             if org_slug:
                 callback(org_slug, limits=limits)

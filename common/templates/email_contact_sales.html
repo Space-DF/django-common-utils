@@ -39,22 +39,11 @@
         </td>
       </tr>
       {% endif %}
-      {% if phone %}
-      <tr>
-        <td style="padding: 6px 0; color: #667085;">Phone</td>
-        <td style="padding: 6px 0; color: {{ contrast_background_color }};">{{ phone }}</td>
-      </tr>
-      {% endif %}
       <tr>
         <td style="padding: 6px 0; color: #667085;">Submitted at</td>
         <td style="padding: 6px 0; color: {{ contrast_background_color }};">{{ submitted_at }}</td>
       </tr>
     </table>
-
-    {% if message %}
-    <p style="text-align: start; margin-top: 16px;"><b style="color: {{ contrast_background_color }};">Message:</b></p>
-    <p style="text-align: start; white-space: pre-line; color: {{ contrast_background_color }};">{{ message }}</p>
-    {% endif %}
 
     <p style="text-align: start; margin-top: 24px;">Best regards,</p>
     <p style="text-align: start"><b>{{ sender_from }}</b></p>

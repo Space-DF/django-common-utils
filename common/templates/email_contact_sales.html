@@ -1,14 +1,16 @@
-{% extends "base.html" %} {% block title %}New Contact Sales Request{% endblock
-%} {% block content %}
+{% extends "base.html" %}
+{% block title %}New Subscription Request - {{ plan_name }}{% endblock %}
+{% block content %}
 <div style="margin-bottom: 30px">
-  <h1 style="color: {{ contrast_background_color }};">
-    New Contact Sales Request
+  <h1 style="color: {{ contrast_background_color }}">
+    New Subscription Request - {{ plan_name }}
   </h1>
-  <p style="text-align: start">Hi {{ brand_name }} Sales Team,</p>
-  <p style="text-align: start">
-    A user has submitted a contact-sales request. Please follow up to complete
-    the upgrade/payment manually.
-  </p>
+
+  <p style="text-align: start">A new subscription request has been submitted.</p>
+
+  <h3 style="text-align: start; margin-top: 24px; color: {{ contrast_background_color }}">
+    Customer Information
+  </h3>
 
   <table
     cellpadding="0"
@@ -17,47 +19,49 @@
     style="text-align: start; border-collapse: collapse; margin: 16px 0"
   >
     <tr>
-      <td style="padding: 6px 0; color: #667085; width: 130px">Name</td>
-      <td
-        style="padding: 6px 0; color: {{ contrast_background_color }}; font-weight: bold;"
-      >
+      <td style="padding: 6px 0; color: #667085; width: 130px">Organization</td>
+      <td style="padding: 6px 0; color: {{ contrast_background_color }}; font-weight: bold">
+        {{ org_name }}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; color: #667085">Organization Slug</td>
+      <td style="padding: 6px 0; color: {{ contrast_background_color }}">
+        {{ org_slug }}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; color: #667085">Requested by</td>
+      <td style="padding: 6px 0; color: {{ contrast_background_color }}; font-weight: bold">
         {{ name }}
       </td>
     </tr>
     <tr>
       <td style="padding: 6px 0; color: #667085">Email</td>
       <td style="padding: 6px 0">
-        <a
-          href="mailto:{{ email }}"
-          style="color: {{ primary_color }} !important;"
-          >{{ email }}</a
-        >
+        <a href="mailto:{{ email }}" style="color: {{ primary_color }} !important">
+          {{ email }}
+        </a>
       </td>
     </tr>
-    {% if company_name %}
     <tr>
-      <td style="padding: 6px 0; color: #667085">Company</td>
-      <td style="padding: 6px 0; color: {{ contrast_background_color }};">
-        {{ company_name }}
+      <td style="padding: 6px 0; color: #667085">Requested Plan</td>
+      <td style="padding: 6px 0; color: {{ contrast_background_color }}; font-weight: bold">
+        {{ plan_name }}
       </td>
     </tr>
-    {% endif %} {% if org_slug %}
     <tr>
-      <td style="padding: 6px 0; color: #667085">Organization</td>
-      <td style="padding: 6px 0; color: {{ contrast_background_color }};">
-        {{ org_name }} (<code>{{ org_slug }}</code>)
-      </td>
-    </tr>
-    {% endif %}
-    <tr>
-      <td style="padding: 6px 0; color: #667085">Submitted at</td>
-      <td style="padding: 6px 0; color: {{ contrast_background_color }};">
+      <td style="padding: 6px 0; color: #667085">Request Time</td>
+      <td style="padding: 6px 0; color: {{ contrast_background_color }}">
         {{ submitted_at }}
       </td>
     </tr>
   </table>
 
-  <p style="text-align: start; margin-top: 24px">Best regards,</p>
+  <p style="text-align: start; margin-top: 24px">
+    Please contact the customer to discuss the subscription details and next steps.
+  </p>
+  <p style="text-align: start">Best regards,</p>
   <p style="text-align: start"><b>{{ sender_from }}</b></p>
 </div>
 {% endblock %}

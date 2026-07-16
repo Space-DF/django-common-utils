@@ -1,0 +1,92 @@
+{% extends "base.html" %} {% block title %}New Subscription Request - {{
+plan_name }}{% endblock %} {% block content %}
+<div style="margin-bottom: 30px">
+  <h1 style="color: {{ contrast_background_color }}">
+    New Subscription Request - {{ plan_name }}
+  </h1>
+
+  <p style="text-align: start">
+    A new subscription request has been submitted.
+  </p>
+
+  <h3
+    style="text-align: start; margin-top: 24px; color: {{ contrast_background_color }}"
+  >
+    Customer Information
+  </h3>
+
+  <table
+    cellpadding="0"
+    cellspacing="0"
+    role="presentation"
+    style="text-align: start; border-collapse: collapse; margin: 16px 0"
+  >
+    <tr>
+      <td style="padding: 6px 0; color: #667085; width: 130px">
+        Subscription ID:
+      </td>
+      <td
+        style="padding: 6px 0; color: {{ contrast_background_color }}; font-weight: bold"
+      >
+        {{ subscription_id }}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; color: #667085; width: 130px">
+        Organization:
+      </td>
+      <td
+        style="padding: 6px 0; color: {{ contrast_background_color }}; font-weight: bold"
+      >
+        {{ org_name }}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; color: #667085">Organization ID:</td>
+      <td style="padding: 6px 0; color: {{ contrast_background_color }}">
+        {{ org_slug }}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; color: #667085">Requested by:</td>
+      <td
+        style="padding: 6px 0; color: {{ contrast_background_color }}; font-weight: bold"
+      >
+        {{ name }}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; color: #667085">Email:</td>
+      <td style="padding: 6px 0">
+        <a
+          href="mailto:{{ email }}"
+          style="color: {{ primary_color }} !important"
+        >
+          {{ email }}
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; color: #667085">Requested Plan:</td>
+      <td
+        style="padding: 6px 0; color: {{ contrast_background_color }}; font-weight: bold"
+      >
+        {{ plan_name }}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; color: #667085">Request Time:</td>
+      <td style="padding: 6px 0; color: {{ contrast_background_color }}">
+        {{ submitted_at }}
+      </td>
+    </tr>
+  </table>
+
+  <p style="text-align: start; margin-top: 24px">
+    Please contact the customer to discuss the subscription details and next
+    steps.
+  </p>
+  <p style="text-align: start">Best regards,</p>
+  <p style="text-align: start"><b>{{ sender_from }}</b></p>
+</div>
+{% endblock %}

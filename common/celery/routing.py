@@ -80,3 +80,31 @@ def setup_organization_task_routing():
             "routing_key": queue_cfg["routing_key"],
         }
     celery_app.conf.task_queues = celery_app.conf.task_queues + tuple(new_queues)
+
+
+def setup_subscription_task_routing(task_names):
+    """
+    Setup task routing for subscription downgrade and upgrade tasks.
+    """
+    celery_app = import_string(settings.CELERY_APP)
+
+    if celery_app.conf.task_queues is None:
+        celery_app.conf.task_queues = ()
+    if celery_app.conf.task_routes is None:
+        celery_app.conf.task_routes = {}
+
+    new_queues = []
+    for name in task_names:
+        new_queues.append(
+            Queue(
+                name,
+                exchange=Exchange(name, type="direct"),
+                routing_key=f"spacedf.tasks.{name}",
+            )
+        )
+        celery_app.conf.task_routes[f"spacedf.tasks.{name}"] = {
+            "queue": name,
+            "routing_key": f"spacedf.tasks.{name}",
+        }
+
+    celery_app.conf.task_queues = celery_app.conf.task_queues + tuple(new_queues)

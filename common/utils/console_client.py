@@ -148,7 +148,7 @@ class ConsoleServiceClient:
 
         Returns ``(data, error)`` matching the reserve/release pattern.
         """
-        endpoint = f"{self.base_url}/billing/internal/quota/view"
+        endpoint = f"{self.base_url}/billing/quota"
         payload = {
             "organization": organization_slug,
             "feature": feature,

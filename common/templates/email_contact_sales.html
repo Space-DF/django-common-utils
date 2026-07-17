@@ -1,6 +1,10 @@
-{% extends "base.html" %} {% block title %}New Subscription Request - {{
-plan_name }}{% endblock %} {% block content %}
+{% extends "base.html" %} {% block title %}New Subscription Request - {{ plan_name }}{% endblock %} {% block content %}
 <div style="margin-bottom: 30px">
+  {% if header_image_url %}
+  <div class="illustration">
+    <img src="{{ header_image_url }}" alt="New Subscription Request" />
+  </div>
+  {% endif %}
   <h1 style="color: {{ contrast_background_color }}">
     New Subscription Request - {{ plan_name }}
   </h1>

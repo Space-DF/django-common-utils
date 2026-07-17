@@ -1,6 +1,7 @@
 import logging
 
 import requests
+from common.apps.billing.constants import FeatureUsageScope
 from requests.exceptions import RequestException
 
 logger = logging.getLogger(__name__)
@@ -56,6 +57,8 @@ class ConsoleServiceClient:
         organization_slug: str,
         feature: str | list[str],
         amount: int = 1,
+        scope_type: str = FeatureUsageScope.ORGANIZATION,
+        scope_id: str | None = None,
     ) -> tuple[bool, str | None]:
         """Reserve quota for one or more features.
 
@@ -64,14 +67,19 @@ class ConsoleServiceClient:
         billing infra problems never block the core product.
         """
         endpoint = f"{self.base_url}/billing/internal/quota/reserve"
+        payload = {
+            "organization": organization_slug,
+            "feature": feature,
+            "amount": amount,
+            "scope_type": scope_type,
+        }
+        if scope_id is not None:
+            payload["scope_id"] = str(scope_id)
+
         try:
             response = requests.post(
                 endpoint,
-                json={
-                    "organization": organization_slug,
-                    "feature": feature,
-                    "amount": amount,
-                },
+                json=payload,
                 headers=self._headers(),
                 timeout=self.timeout,
             )
@@ -106,17 +114,24 @@ class ConsoleServiceClient:
         organization_slug: str,
         feature: str | list[str],
         amount: int = 1,
+        scope_type: str = FeatureUsageScope.ORGANIZATION,
+        scope_id: str | None = None,
     ) -> None:
         """Release previously reserved quota for one or more features."""
         endpoint = f"{self.base_url}/billing/internal/quota/release"
+        payload = {
+            "organization": organization_slug,
+            "feature": feature,
+            "amount": amount,
+            "scope_type": scope_type,
+        }
+        if scope_id is not None:
+            payload["scope_id"] = str(scope_id)
+
         try:
             requests.post(
                 endpoint,
-                json={
-                    "organization": organization_slug,
-                    "feature": feature,
-                    "amount": amount,
-                },
+                json=payload,
                 headers=self._headers(),
                 timeout=self.timeout,
             )
@@ -132,19 +147,26 @@ class ConsoleServiceClient:
         self,
         organization_slug: str,
         feature: str | list[str],
+        scope_type: str = FeatureUsageScope.ORGANIZATION,
+        scope_id: str | None = None,
     ) -> tuple[dict | None, str | None]:
         """View current quota usage for one or more features.
 
         Returns ``(data, error)`` matching the reserve/release pattern.
         """
         endpoint = f"{self.base_url}/billing/quota"
+        payload = {
+            "organization": organization_slug,
+            "feature": feature,
+            "scope_type": scope_type,
+        }
+        if scope_id is not None:
+            payload["scope_id"] = str(scope_id)
+
         try:
             response = requests.post(
                 endpoint,
-                json={
-                    "organization": organization_slug,
-                    "feature": feature,
-                },
+                json=payload,
                 headers=self._headers(),
                 timeout=self.timeout,
             )

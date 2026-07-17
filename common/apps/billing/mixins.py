@@ -2,22 +2,24 @@
 
 Usage::
 
+    from common.apps.billing.constants import FeatureCode
+
     class DeviceQuota(BaseQuota):
         rules = {
-            "create": "device.max_count",
-            "bulk_create": "device.max_count",
-            "list": "device.read_limit",
-            "retrieve": "device.read_limit",
+            "create": FeatureCode.DEVICE_MAX_COUNT,
+            "bulk_create": FeatureCode.DEVICE_MAX_COUNT,
         }
 
     class DeviceViewSet(QuotaMixin, viewsets.ModelViewSet):
         quota_classes = [DeviceQuota]
 
-Rules can use a single feature code or a list of feature codes.
+Rules can use a single feature code, a list of feature codes, or scoped rule
+objects like ``{"feature": FeatureCode.DEVICE_MAX_COUNT, "scope": scope}``.
 """
 
 import logging
 
+from common.apps.billing.constants import FeatureUsageScope
 from rest_framework.exceptions import PermissionDenied
 
 from common.utils.console_client import console_client
@@ -27,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 class BaseQuota:
     rules = {}
-    scope = "user"
+    scope = FeatureUsageScope.USER
     feature_scopes = {}
     reserve_actions = {"create", "bulk_create"}
     release_actions = set()
@@ -146,6 +148,27 @@ class BaseQuota:
             return getattr(user, "id", None)
         return None
 
+    def get_scope_id(self, request, view, scope_type):
+        if scope_type == FeatureUsageScope.ORGANIZATION:
+            return None
+        if scope_type == FeatureUsageScope.USER:
+            return self.get_user_id(request, view)
+        if scope_type == FeatureUsageScope.SPACE:
+            space_slug = request.headers.get("X-Space")
+            if not space_slug:
+                return None
+
+            from common.apps.space.models import Space
+
+            return (
+                Space.objects.filter(slug_name=space_slug)
+                .values_list("id", flat=True)
+                .first()
+            )
+        if hasattr(view, "get_quota_scope_id"):
+            return view.get_quota_scope_id(request, self, scope_type)
+        return None
+
     def get_feature_scope(self, request, view, feature):
         return self.feature_scopes.get(feature, self.scope)
 
@@ -154,19 +177,13 @@ class BaseQuota:
 
         for feature_rule in feature_rules:
             feature = feature_rule["feature"]
-            scope = feature_rule["scope"]
-            if scope == "organization":
-                user_id = None
-            elif scope == "user":
-                user_id = self.get_user_id(request, view)
-                if not user_id:
-                    self.message = "User is required for quota."
-                    return None
-            else:
-                self.message = f"Invalid quota scope '{scope}'."
+            scope_type = feature_rule["scope"]
+            scope_id = self.get_scope_id(request, view, scope_type)
+            if scope_type != FeatureUsageScope.ORGANIZATION and not scope_id:
+                self.message = f"Scope id is required for quota scope '{scope_type}'."
                 return None
 
-            grouped_features.setdefault(user_id, []).append(feature)
+            grouped_features.setdefault((scope_type, scope_id), []).append(feature)
 
         return grouped_features
 
@@ -207,7 +224,8 @@ class BaseQuota:
             key = (
                 id(reservation["quota"]),
                 reservation["org_slug"],
-                reservation["user_id"],
+                reservation["scope_type"],
+                reservation["scope_id"],
                 reservation["feature"],
                 reservation["amount"],
             )
@@ -216,19 +234,26 @@ class BaseQuota:
 
             group_key = (
                 reservation["org_slug"],
-                reservation["user_id"],
+                reservation["scope_type"],
+                reservation["scope_id"],
                 reservation["amount"],
             )
             grouped_features.setdefault(group_key, []).append(reservation["feature"])
             released.add(key)
 
-        for (org_slug, user_id, reserved_amount), features in grouped_features.items():
+        for (
+            org_slug,
+            scope_type,
+            scope_id,
+            reserved_amount,
+        ), features in grouped_features.items():
             try:
                 console_client.release_quota(
                     org_slug,
                     features,
                     reserved_amount,
-                    user_id=user_id,
+                    scope_type=scope_type,
+                    scope_id=scope_id,
                 )
             except Exception:  # noqa: BLE001
                 logger.warning("release_quota failed for %s/%s", org_slug, features)
@@ -257,12 +282,13 @@ class BaseQuota:
         if grouped_features is None:
             return False
 
-        for user_id, scoped_features in grouped_features.items():
+        for (scope_type, scope_id), scoped_features in grouped_features.items():
             reserved, error = console_client.reserve_quota(
                 org_slug,
                 scoped_features,
                 amount,
-                user_id=user_id,
+                scope_type=scope_type,
+                scope_id=scope_id,
             )
             if not reserved:
                 self.message = error or self.message
@@ -275,7 +301,8 @@ class BaseQuota:
                         {
                             "quota": self,
                             "org_slug": org_slug,
-                            "user_id": user_id,
+                            "scope_type": scope_type,
+                            "scope_id": scope_id,
                             "feature": feature,
                             "amount": amount,
                         }
@@ -296,13 +323,14 @@ class BaseQuota:
         if grouped_features is None:
             return None
 
-        for user_id, scoped_features in grouped_features.items():
+        for (scope_type, scope_id), scoped_features in grouped_features.items():
             try:
                 console_client.release_quota(
                     org_slug,
                     scoped_features,
                     amount,
-                    user_id=user_id,
+                    scope_type=scope_type,
+                    scope_id=scope_id,
                 )
             except Exception:  # noqa: BLE001
                 logger.warning(

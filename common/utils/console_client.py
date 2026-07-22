@@ -1,8 +1,9 @@
 import logging
 
 import requests
-from common.apps.billing.constants import FeatureUsageScope
 from requests.exceptions import RequestException
+
+from common.apps.billing.constants import FeatureUsageScope
 
 logger = logging.getLogger(__name__)
 
@@ -14,11 +15,14 @@ class ConsoleServiceClient:
         self.base_url = base_url or "http://console:80/api"
         self.timeout = 10
 
-    def _headers(self):
-        return {
+    def _headers(self, organization_slug: str | None = None):
+        headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
+        if organization_slug:
+            headers["X-Organization"] = organization_slug
+        return headers
 
     def get_custom_emails(
         self,
@@ -55,12 +59,12 @@ class ConsoleServiceClient:
     def reserve_quota(
         self,
         organization_slug: str,
-        feature: str | list[str],
+        feature: str,
         amount: int = 1,
         scope_type: str = FeatureUsageScope.ORGANIZATION,
         scope_id: str | None = None,
     ) -> tuple[bool, str | None]:
-        """Reserve quota for one or more features.
+        """Reserve quota for a feature.
 
         Returns ``(reserved, error)``. On network error or missing billing
         data the reservation is treated as successful (fail-open) so that
@@ -68,7 +72,6 @@ class ConsoleServiceClient:
         """
         endpoint = f"{self.base_url}/billing/internal/quota/reserve"
         payload = {
-            "organization": organization_slug,
             "feature": feature,
             "amount": amount,
             "scope_type": scope_type,
@@ -80,7 +83,7 @@ class ConsoleServiceClient:
             response = requests.post(
                 endpoint,
                 json=payload,
-                headers=self._headers(),
+                headers=self._headers(organization_slug),
                 timeout=self.timeout,
             )
         except RequestException as exc:
@@ -112,15 +115,14 @@ class ConsoleServiceClient:
     def release_quota(
         self,
         organization_slug: str,
-        feature: str | list[str],
+        feature: str,
         amount: int = 1,
         scope_type: str = FeatureUsageScope.ORGANIZATION,
         scope_id: str | None = None,
     ) -> None:
-        """Release previously reserved quota for one or more features."""
+        """Release previously reserved quota for a feature."""
         endpoint = f"{self.base_url}/billing/internal/quota/release"
         payload = {
-            "organization": organization_slug,
             "feature": feature,
             "amount": amount,
             "scope_type": scope_type,
@@ -132,7 +134,7 @@ class ConsoleServiceClient:
             requests.post(
                 endpoint,
                 json=payload,
-                headers=self._headers(),
+                headers=self._headers(organization_slug),
                 timeout=self.timeout,
             )
         except RequestException as exc:
@@ -146,17 +148,16 @@ class ConsoleServiceClient:
     def get_quota(
         self,
         organization_slug: str,
-        feature: str | list[str],
+        feature: str,
         scope_type: str = FeatureUsageScope.ORGANIZATION,
         scope_id: str | None = None,
     ) -> tuple[dict | None, str | None]:
-        """View current quota usage for one or more features.
+        """View current quota usage for a feature.
 
         Returns ``(data, error)`` matching the reserve/release pattern.
         """
         endpoint = f"{self.base_url}/billing/quota"
         payload = {
-            "organization": organization_slug,
             "feature": feature,
             "scope_type": scope_type,
         }
@@ -167,7 +168,7 @@ class ConsoleServiceClient:
             response = requests.post(
                 endpoint,
                 json=payload,
-                headers=self._headers(),
+                headers=self._headers(organization_slug),
                 timeout=self.timeout,
             )
             response.raise_for_status()

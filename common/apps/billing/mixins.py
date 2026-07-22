@@ -19,9 +19,10 @@ objects like ``{"feature": FeatureCode.DEVICE_MAX_COUNT, "scope": scope}``.
 
 import logging
 
-from common.apps.billing.constants import FeatureUsageScope
 from rest_framework.exceptions import PermissionDenied
 
+from common.apps.billing.constants import FeatureUsageScope
+from common.apps.space.models import Space
 from common.utils.console_client import console_client
 
 logger = logging.getLogger(__name__)
@@ -158,15 +159,11 @@ class BaseQuota:
             if not space_slug:
                 return None
 
-            from common.apps.space.models import Space
-
             return (
                 Space.objects.filter(slug_name=space_slug)
                 .values_list("id", flat=True)
                 .first()
             )
-        if hasattr(view, "get_quota_scope_id"):
-            return view.get_quota_scope_id(request, self, scope_type)
         return None
 
     def get_feature_scope(self, request, view, feature):
@@ -247,16 +244,17 @@ class BaseQuota:
             scope_id,
             reserved_amount,
         ), features in grouped_features.items():
-            try:
-                console_client.release_quota(
-                    org_slug,
-                    features,
-                    reserved_amount,
-                    scope_type=scope_type,
-                    scope_id=scope_id,
-                )
-            except Exception:  # noqa: BLE001
-                logger.warning("release_quota failed for %s/%s", org_slug, features)
+            for feature in features:
+                try:
+                    console_client.release_quota(
+                        org_slug,
+                        feature,
+                        reserved_amount,
+                        scope_type=scope_type,
+                        scope_id=scope_id,
+                    )
+                except Exception:  # noqa: BLE001
+                    logger.warning("release_quota failed for %s/%s", org_slug, feature)
 
         view._quota_released = released
         return None
@@ -283,19 +281,19 @@ class BaseQuota:
             return False
 
         for (scope_type, scope_id), scoped_features in grouped_features.items():
-            reserved, error = console_client.reserve_quota(
-                org_slug,
-                scoped_features,
-                amount,
-                scope_type=scope_type,
-                scope_id=scope_id,
-            )
-            if not reserved:
-                self.message = error or self.message
-                self.release(request, view)
-                return False
-
             for feature in scoped_features:
+                reserved, error = console_client.reserve_quota(
+                    org_slug,
+                    feature,
+                    amount,
+                    scope_type=scope_type,
+                    scope_id=scope_id,
+                )
+                if not reserved:
+                    self.message = error or self.message
+                    self.release(request, view)
+                    return False
+
                 if amount > 0:
                     view._quota_reserved.append(
                         {
@@ -324,20 +322,21 @@ class BaseQuota:
             return None
 
         for (scope_type, scope_id), scoped_features in grouped_features.items():
-            try:
-                console_client.release_quota(
-                    org_slug,
-                    scoped_features,
-                    amount,
-                    scope_type=scope_type,
-                    scope_id=scope_id,
-                )
-            except Exception:  # noqa: BLE001
-                logger.warning(
-                    "release_quota failed for %s/%s",
-                    org_slug,
-                    scoped_features,
-                )
+            for feature in scoped_features:
+                try:
+                    console_client.release_quota(
+                        org_slug,
+                        feature,
+                        amount,
+                        scope_type=scope_type,
+                        scope_id=scope_id,
+                    )
+                except Exception:  # noqa: BLE001
+                    logger.warning(
+                        "release_quota failed for %s/%s",
+                        org_slug,
+                        feature,
+                    )
 
         return None
 

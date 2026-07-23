@@ -7,6 +7,7 @@ class DeactivationMixin:
     deactivation_lookup_kwarg = None
     deactivation_lookup_field = "pk"
     deactivation_lookup_select_related = None
+    deactivation_allowed_methods = []
 
     def _is_self_reference(self, target, attr):
         model_meta = getattr(target, "_meta", None)
@@ -101,6 +102,8 @@ class DeactivationMixin:
             raise PermissionDenied(self.get_deactivation_message(target, target_path))
 
     def check_deactivated_object(self, instance):
+        if self.request.method in self.deactivation_allowed_methods:
+            return instance
         for target_path, target in self._get_deactivation_targets(instance):
             self.check_deactivated(target, target_path)
         return instance

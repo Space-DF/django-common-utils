@@ -1,0 +1,44 @@
+{% extends "base.html" %} {% block title %}Your SpaceDF subscription has expired{% endblock %} {% block content %}
+<div style="margin-bottom: 30px">
+  {% if header_image_url %}
+  <div class="illustration">
+    <img src="{{ header_image_url }}" alt="Subscription Expired" />
+  </div>
+  {% endif %}
+  <h1 style="color: {{ contrast_background_color }}">
+    Your SpaceDF subscription has expired
+  </h1>
+
+  <p style="text-align: start">
+    Hi{% if user_name %} {{ user_name }}{% else %} there{% endif %},
+  </p>
+
+  <p style="text-align: start">
+    Your {{ plan_name }} subscription for <b>{{ organization_name }}</b> expired
+    on {{ expiry_date }}.
+  </p>
+
+  <p style="text-align: start">
+    As a result, some premium features may no longer be available until your
+    subscription is renewed.
+  </p>
+
+  <p style="text-align: start">
+    To restore full access, please contact our team to renew your subscription.
+  </p>
+
+  <p style="text-align: start">
+    <a
+      style="text-align: start; background-color: {{ primary_color }}; color: {{ contrast_primary_color }};"
+      href="{{ manage_subscription_url }}"
+      class="btn-invite"
+      target="_blank"
+    >
+      Manage Subscription
+    </a>
+  </p>
+
+  <p style="text-align: start">Best regards,</p>
+  <p style="text-align: start"><b>{{ sender_from }}</b></p>
+</div>
+{% endblock %}

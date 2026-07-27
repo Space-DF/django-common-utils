@@ -89,7 +89,10 @@ def get_email_context(email_context_data, custom_email):
                 _get_value(custom_email, "sender_email")
                 or email_context_data.get("sender_email", "support@spacedf.com")
             ),
-            "email_footer": (_get_value(custom_email, "footer_text") or ""),
+            "email_footer": (
+                _get_value(custom_email, "footer_text")
+                or "©2025 Digital Fortress. All rights reserved."
+            ),
             "header_image_url": _get_value(custom_email, "url_header_image")
             or email_context_data.get("header_image_url", ""),
             "linkedin_url": social_links.get("linkedin_url", ""),

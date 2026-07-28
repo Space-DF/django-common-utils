@@ -3,9 +3,10 @@ from rest_framework.exceptions import ParseError
 from rest_framework.generics import GenericAPIView
 
 from common.apps.space.models import Space
+from common.views.deactivation import DeactivationMixin
 
 
-class SpaceAPIView(GenericAPIView):
+class SpaceAPIView(DeactivationMixin, GenericAPIView):
     space_field = None
 
     def get_queryset(self):
@@ -24,6 +25,9 @@ class SpaceAPIView(GenericAPIView):
         if space_slug_name is None:
             raise ParseError("X-Space header is required")
 
+        space = Space.objects.filter(slug_name=space_slug_name).first()
+        self.check_deactivated(space)
+
         filters = {
             f"{self.space_field}__slug_name": space_slug_name,
             f"{self.space_field}__is_active": True,
@@ -32,8 +36,14 @@ class SpaceAPIView(GenericAPIView):
         return queryset.filter(**filters)
 
     def create_with_space(self, serializer):
+        space_slug_name = self.request.headers.get("X-Space")
+        if space_slug_name is None:
+            raise ParseError("X-Space header is required")
+
+        space = Space.objects.get(slug_name=space_slug_name)
+        self.check_deactivated(space)
+
         if "__" not in self.space_field:
-            space = Space.objects.get(slug_name=self.request.headers.get("X-Space"))
             return serializer.save(**{self.space_field: space})
 
         return serializer.save()

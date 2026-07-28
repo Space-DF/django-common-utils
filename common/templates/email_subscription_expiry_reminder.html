@@ -1,0 +1,39 @@
+{% extends "base.html" %} {% block title %}Your SpaceDF subscription will expire soon{% endblock %} {% block content %}
+<div style="margin-bottom: 30px">
+  {% if header_image_url %}
+  <div class="illustration">
+    <img src="{{ header_image_url }}" alt="Subscription Expiry Reminder" />
+  </div>
+  {% endif %}
+
+  <h1 style="color: {{ contrast_background_color }}">
+    Your SpaceDF subscription will expire soon.
+  </h1>
+
+  <p style="text-align: start">
+    Hi{% if user_name %} {{ user_name }}{% else %} there{% endif %},
+  </p>
+
+  <p style="text-align: start">
+    We hope you're enjoying SpaceDF.
+  </p>
+
+  <p style="text-align: start">
+    This is a friendly reminder that your {{ plan_name }} subscription for
+    <b>{{ organization_name }}</b> will expire on {{ expiry_date }}.
+  </p>
+
+  <p style="text-align: start">
+    To avoid any interruption to your services and continue accessing your
+    premium features, please renew your subscription before the expiration date.
+  </p>
+
+  <p style="text-align: start">
+    If you would like to renew or have any questions about your subscription,
+    please contact our team.
+  </p>
+
+  <p style="text-align: start">Best regards,</p>
+  <p style="text-align: start"><b>{{ sender_from }}</b></p>
+</div>
+{% endblock %}

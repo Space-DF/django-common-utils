@@ -1,0 +1,38 @@
+{% extends "base.html" %} {% block title %}Subscription Request Received{% endblock %} {% block content %}
+<div style="margin-bottom: 30px">
+  {% if header_image_url %}
+  <div class="illustration">
+    <img src="{{ header_image_url }}" alt="Subscription Request Received" />
+  </div>
+  {% endif %}
+  <h1 style="color: {{ contrast_background_color }}">
+    Your Subscription Request Has Been Received
+  </h1>
+
+  <p style="text-align: start">
+    Hi{% if name %} {{ name }}{% else %} there{% endif %},
+  </p>
+
+  <p style="text-align: start">
+    Thank you for your interest in subscribing to the {{ plan_name }} plan.<br />
+    We've successfully received your subscription request.
+  </p>
+
+  <p style="text-align: start">
+    <b style="color: {{ contrast_background_color }}">What happens next?</b>
+  </p>
+
+  <ul
+    style="text-align: start; padding-left: 20px; margin: 10px 0; font-size: 16px; line-height: 1.6"
+  >
+    <li>Our Sales team will review your request.</li>
+    <li>We'll contact you to discuss the selected subscription plan.</li>
+    <li>
+      Once the subscription is confirmed, your Organization will be upgraded accordingly.
+    </li>
+  </ul>
+
+  <p style="text-align: start">Best regards,</p>
+  <p style="text-align: start"><b>{{ sender_from }}</b></p>
+</div>
+{% endblock %}

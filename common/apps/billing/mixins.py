@@ -19,16 +19,18 @@ objects like ``{"feature": FeatureCode.DEVICE_MAX_COUNT, "scope": scope}``.
 
 import logging
 
+from django.conf import settings
+from django.utils.module_loading import import_string
 from rest_framework.exceptions import PermissionDenied
 
 from common.apps.billing.constants import FeatureUsageScope
-from common.apps.space.models import Space
 from common.utils.console_client import console_client
 
 logger = logging.getLogger(__name__)
 
 
 class BaseQuota:
+    quota_service = None
     rules = {}
     scope = FeatureUsageScope.USER
     feature_scopes = {}
@@ -134,10 +136,28 @@ class BaseQuota:
         return list(dict.fromkeys(features))
 
     def get_org_slug(self, request, view):
+        organization = getattr(request, "organization", None)
+        if organization is not None:
+            return getattr(organization, "slug_name", None)
+
         tenant = getattr(request, "tenant", None)
         return getattr(tenant, "slug_name", None) or request.headers.get(
             "X-Organization"
         )
+
+    def get_quota_service(self, view):
+        backend = (
+            getattr(view, "quota_service", None)
+            or self.quota_service
+            or getattr(settings, "BILLING_QUOTA_SERVICE", None)
+        )
+        if backend is None:
+            return console_client
+        if isinstance(backend, str):
+            backend = import_string(backend)
+        if isinstance(backend, type):
+            return backend()
+        return backend
 
     def get_user_id(self, request, view):
         user_id = request.headers.get("X-User-ID")
@@ -155,6 +175,8 @@ class BaseQuota:
         if scope_type == FeatureUsageScope.USER:
             return self.get_user_id(request, view)
         if scope_type == FeatureUsageScope.SPACE:
+            from common.apps.space.models import Space
+
             space_slug = request.headers.get("X-Space")
             if not space_slug:
                 return None
@@ -164,6 +186,8 @@ class BaseQuota:
                 .values_list("id", flat=True)
                 .first()
             )
+        if hasattr(view, "get_quota_scope_id"):
+            return view.get_quota_scope_id(request, self, scope_type)
         return None
 
     def get_feature_scope(self, request, view, feature):
@@ -246,7 +270,7 @@ class BaseQuota:
         ), features in grouped_features.items():
             for feature in features:
                 try:
-                    console_client.release_quota(
+                    self.get_quota_service(view).release_quota(
                         org_slug,
                         feature,
                         reserved_amount,
@@ -273,8 +297,12 @@ class BaseQuota:
             return True
 
         org_slug = self.get_org_slug(request, view)
+        backend = self.get_quota_service(view)
         if not org_slug:
-            return True
+            if getattr(backend, "allow_missing_organization", True):
+                return True
+            self.message = "Organization context required."
+            return False
 
         grouped_features = self._group_features_by_scope(request, view, feature_rules)
         if grouped_features is None:
@@ -282,7 +310,7 @@ class BaseQuota:
 
         for (scope_type, scope_id), scoped_features in grouped_features.items():
             for feature in scoped_features:
-                reserved, error = console_client.reserve_quota(
+                reserved, error = backend.reserve_quota(
                     org_slug,
                     feature,
                     amount,
@@ -324,7 +352,7 @@ class BaseQuota:
         for (scope_type, scope_id), scoped_features in grouped_features.items():
             for feature in scoped_features:
                 try:
-                    console_client.release_quota(
+                    self.get_quota_service(view).release_quota(
                         org_slug,
                         feature,
                         amount,

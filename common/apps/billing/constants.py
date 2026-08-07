@@ -10,3 +10,4 @@ class FeatureCode:
     DASHBOARD_MAX_COUNT = "dashboard.max_count"
     DASHBOARD_UPDATE_COUNT = "dashboard.update_count"
     WHITELABEL_ENABLED = "whitelabel.enabled"
+    AUTOMATION_MAX_COUNT = "automation.max_count"

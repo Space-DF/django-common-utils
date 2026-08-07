@@ -1,10 +1,15 @@
 import logging
 
 from celery import shared_task
+from celery.exceptions import Ignore
 from django.db import models, transaction
 from django_tenants.utils import get_tenant_model, tenant_context
 
 logger = logging.getLogger(__name__)
+
+
+class PermanentTaskError(Exception):
+    """Signals an invalid task payload that should not be retried."""
 
 
 def task(max_retries=3, bind=False, task_acks_late=True, prefetch_count=1, **option):
@@ -28,6 +33,9 @@ def task(max_retries=3, bind=False, task_acks_late=True, prefetch_count=1, **opt
                     handler(self=self, **kwargs)
                 else:
                     handler(**kwargs)
+            except PermanentTaskError as e:
+                logger.exception(e)
+                raise Ignore()
             except Exception as e:
                 logger.exception(e)
                 self.retry(countdown=3**self.request.retries)

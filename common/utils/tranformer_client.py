@@ -17,19 +17,36 @@ class TranformerServiceClient:
         )
         self.timeout = 30
 
-    def get_device_model(self, device_model_id: str):
-        """Fetch a specific device model by ID from the Transformer Service API"""
-        # Try to get from cache first
-        cache_key = f"transformer:device_model:{device_model_id}"  # noqa
-        cached = cache.get(cache_key)
-        if cached is not None:
-            return cached
+    def get_device_profiles_by_model_ids(self, device_model_ids):
+        """Fetch multiple device models by ID from the Transformer Service API"""
+        ids = sorted(
+            {
+                str(device_model_id)
+                for device_model_id in device_model_ids
+                if device_model_id
+            }
+        )
+        if not ids:
+            return {}
 
-        # Fetch from direct endpoint
-        endpoint = f"{self.base_url}/api/device-models/{device_model_id}"
+        cached_profiles = {}
+        missing_ids = []
+        for device_model_id in ids:
+            cache_key = f"transformer:device_model:{device_model_id}"  # noqa
+            cached = cache.get(cache_key)
+            if cached is not None:
+                cached_profiles[device_model_id] = cached
+            else:
+                missing_ids.append(device_model_id)
+
+        if not missing_ids:
+            return cached_profiles
+
+        endpoint = f"{self.base_url}/api/device-models/batch"
         try:
-            response = requests.get(
+            response = requests.post(
                 endpoint,
+                json={"device_model_ids": missing_ids},
                 timeout=self.timeout,
                 headers={
                     "Content-Type": "application/json",
@@ -37,9 +54,18 @@ class TranformerServiceClient:
                 },
             )
             response.raise_for_status()
-            model = response.json()
-            cache.set(cache_key, model, timeout=300)
-            return model
+            payload = response.json()
         except RequestException as e:
-            logger.error(f"Error fetching device model {device_model_id}: {str(e)}")
-            return None
+            logger.error(f"Error fetching device models batch: {str(e)}")
+            return cached_profiles
+
+        profiles = payload.get("results", payload if isinstance(payload, list) else [])
+        for profile in profiles:
+            device_model_id = str(profile.get("id") or "").strip()
+            if device_model_id:
+                cached_profiles[device_model_id] = profile
+                cache.set(
+                    f"transformer:device_model:{device_model_id}", profile, timeout=300
+                )
+
+        return cached_profiles

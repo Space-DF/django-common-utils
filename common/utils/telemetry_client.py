@@ -203,21 +203,24 @@ class TelemetryServiceClient:
             logger.error(f"Error fetching widget data for entity {entity_id}: {str(e)}")
             raise
 
-    def get_entity_properties(
+    def get_entity_properties_batch(
         self,
-        device_id: str,
+        device_ids: list[str],
         organization_slug: str,
-    ) -> list[dict]:
+    ) -> dict[str, list[dict]]:
         """
-        Fetch device entities with latest values from telemetry service in one call
+        Fetch device entities with latest values for multiple devices in one call
         """
-        endpoint = f"{self.base_url}/api/telemetry/v1/data/entity-properties"
-        params = {"device_id": device_id}
+        ids = sorted({str(device_id) for device_id in device_ids if device_id})
+        if not ids:
+            return {}
+
+        endpoint = f"{self.base_url}/api/telemetry/v1/data/entity-properties/batch"
 
         try:
-            response = requests.get(
+            response = requests.post(
                 endpoint,
-                params=params,
+                json={"device_ids": ids},
                 timeout=self.timeout,
                 headers={
                     "Content-Type": "application/json",
@@ -227,24 +230,20 @@ class TelemetryServiceClient:
             )
 
             logger.info(
-                f"Device entity properties response status: {response.status_code}"
+                f"Device entity properties batch response status: {response.status_code}"
             )
 
             if response.status_code == 404:
-                logger.warning(
-                    f"404 - No device entity properties found for device {device_id}"
-                )
-                return []
+                logger.warning("404 - No device entity properties found for batch")
+                return {}
 
             response.raise_for_status()
             data = response.json()
 
-            return data if isinstance(data, list) else []
+            return data if isinstance(data, dict) else {}
 
         except RequestException as e:
-            logger.error(
-                f"Error fetching device entity properties for device {device_id}: {str(e)}"
-            )
+            logger.error(f"Error fetching device entity properties batch: {str(e)}")
             raise
 
     def check_health(self) -> bool:

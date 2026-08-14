@@ -2,6 +2,33 @@ from django.conf import settings
 from django.utils.module_loading import import_string
 from kombu import Exchange, Queue
 
+from common.celery.constants import SUBSCRIPTION_LIFECYCLE_EXCHANGES
+
+
+def get_queue_name(queue):
+    name = getattr(queue, "name", queue)
+    if isinstance(name, dict):
+        name = name.get("name") or name.get("queue")
+    return name
+
+
+def append_unique_task_queues(celery_app, queues):
+    if celery_app.conf.task_queues is None:
+        celery_app.conf.task_queues = ()
+
+    existing = {
+        name: queue
+        for queue in celery_app.conf.task_queues
+        if (name := get_queue_name(queue))
+    }
+
+    for queue in queues:
+        name = get_queue_name(queue)
+        if name and name not in existing:
+            existing[name] = queue
+
+    celery_app.conf.task_queues = tuple(existing.values())
+
 
 def setup_synchronous_model_task_routing():
     celery_app = import_string(settings.CELERY_APP)
@@ -79,12 +106,16 @@ def setup_organization_task_routing():
             "queue": queue_name,
             "routing_key": queue_cfg["routing_key"],
         }
-    celery_app.conf.task_queues = celery_app.conf.task_queues + tuple(new_queues)
+    append_unique_task_queues(celery_app, new_queues)
 
 
-def setup_subscription_task_routing(task_names):
-    """
-    Setup task routing for subscription downgrade and upgrade tasks.
+def setup_subscription_task_routing(task_specs):
+    """Setup routing for subscription lifecycle tasks.
+
+    Each task spec must provide:
+    - task_name: celery task name without the ``spacedf.tasks.`` prefix
+    - service: downstream service routing prefix, e.g. ``telemetry``
+    - lifecycle: ``downgrade`` or ``upgrade``
     """
     celery_app = import_string(settings.CELERY_APP)
 
@@ -94,17 +125,27 @@ def setup_subscription_task_routing(task_names):
         celery_app.conf.task_routes = {}
 
     new_queues = []
-    for name in task_names:
+    for task_spec in task_specs:
+        name = task_spec["task_name"]
+        service_name = task_spec["service"]
+        lifecycle = task_spec["lifecycle"]
+
+        exchange_name = SUBSCRIPTION_LIFECYCLE_EXCHANGES.get(lifecycle)
+        if exchange_name is None:
+            raise ValueError(f"unsupported subscription lifecycle: {lifecycle}")
+
+        routing_key = f"{service_name}.{lifecycle}"
         new_queues.append(
             Queue(
                 name,
-                exchange=Exchange(name, type="direct"),
-                routing_key=f"spacedf.tasks.{name}",
+                exchange=Exchange(exchange_name, type="direct"),
+                routing_key=routing_key,
+                durable=True,
             )
         )
         celery_app.conf.task_routes[f"spacedf.tasks.{name}"] = {
             "queue": name,
-            "routing_key": f"spacedf.tasks.{name}",
+            "routing_key": routing_key,
         }
 
-    celery_app.conf.task_queues = celery_app.conf.task_queues + tuple(new_queues)
+    append_unique_task_queues(celery_app, new_queues)

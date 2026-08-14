@@ -207,6 +207,7 @@ class TelemetryServiceClient:
         self,
         device_ids: list[str],
         organization_slug: str,
+        end_dates: dict[str, str] | None = None,
     ) -> dict[str, list[dict]]:
         """
         Fetch device entities with latest values for multiple devices in one call
@@ -220,7 +221,7 @@ class TelemetryServiceClient:
         try:
             response = requests.post(
                 endpoint,
-                json={"device_ids": ids},
+                json={"device_ids": ids, "end_dates": end_dates or {}},
                 timeout=self.timeout,
                 headers={
                     "Content-Type": "application/json",

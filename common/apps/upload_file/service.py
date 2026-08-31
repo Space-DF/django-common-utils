@@ -3,51 +3,124 @@ import uuid
 from urllib.parse import unquote, urlsplit
 
 import boto3
+from botocore.client import Config
+from django.conf import settings
 
-client = boto3.client("s3")
+_s3_client = None
+
+logger = logging.getLogger(__name__)
 
 
-def put_presigned_url(bucket_name, expiration=3600):
-    """
-    return presigned URL and file name
-    """
+def _get_s3_client():
+    global _s3_client
+    if _s3_client is None:
+        _s3_client = boto3.client(
+            "s3",
+            config=Config(
+                signature_version="s3v4",
+                s3={"addressing_style": "path"},
+            ),
+            region_name=settings.AWS_S3.get("AWS_REGION", "ap-southeast-1"),
+        )
+    return _s3_client
+
+
+def _find_s3_key(bucket_name, base_key):
+    _extensions = ["", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".glb", ".gltf"]
+    client = _get_s3_client()
+    for ext in _extensions:
+        try_key = f"{base_key}{ext}"
+        try:
+            client.head_object(Bucket=bucket_name, Key=try_key)
+            return try_key
+        except Exception:
+            continue
+    return None
+
+
+def _build_s3_key(visibility, scope, file_name, org_slug=None, user_id=None):
+    unique_name = f"{uuid.uuid4().hex}_{file_name}"
+
+    if scope == "root_user":
+        return f"{visibility}/root_users/{user_id}/{unique_name}"
+
+    if scope == "org_user":
+        return f"{visibility}/organizations/{org_slug}/users/{user_id}/{unique_name}"
+
+    return f"{visibility}/organizations/{org_slug}/{unique_name}"
+
+
+def put_presigned_url(
+    bucket_name,
+    file_name,
+    content_type,
+    visibility,
+    scope,
+    org_slug=None,
+    user_id=None,
+    expiration=3600,
+):
     try:
-        file_name = uuid.uuid4()
+        key = _build_s3_key(visibility, scope, file_name, org_slug, user_id)
+        client = _get_s3_client()
+
+        params = {
+            "Bucket": bucket_name,
+            "Key": key,
+            "ContentType": content_type,
+        }
+
         presigned_url = client.generate_presigned_url(
             ClientMethod="put_object",
-            Params={"Bucket": bucket_name, "Key": f"uploads/{file_name}"},
+            Params=params,
             ExpiresIn=expiration,
             HttpMethod="PUT",
         )
-        return {"file_name": file_name, "presigned_url": presigned_url}
+        return {"key": key, "presigned_url": presigned_url}
     except Exception as e:
-        logging.error(f"Error: {e}")
+        logger.error(f"Error generating presigned PUT URL: {e}")
         return None
 
 
+def get_file_url(bucket_name, key, expiration=3600):
+    if not key:
+        return None
+
+    key = normalize_s3_key(key)
+
+    if not key:
+        return None
+
+    if key.startswith("public/"):
+        region = (
+            settings.AWS_REGION if hasattr(settings, "AWS_REGION") else "ap-southeast-1"
+        )
+        return f"https://s3.{region}.amazonaws.com/{bucket_name}/{key}"
+
+    if not key.startswith(("public/", "private/")):
+        found = _find_s3_key(bucket_name, f"uploads/{key}")
+        if found:
+            key = found
+
+    return get_presigned_url(bucket_name, key, expiration)
+
+
 def get_presigned_url(bucket_name, link_file, expiration=3600):
-    """
-    Return the URL from name file
-    """
     try:
+        client = _get_s3_client()
         url_image = client.generate_presigned_url(
             ClientMethod="get_object",
-            Params={
-                "Bucket": bucket_name,
-                "Key": link_file,
-            },
+            Params={"Bucket": bucket_name, "Key": link_file},
             ExpiresIn=expiration,
+            HttpMethod="GET",
         )
         return url_image
     except Exception as e:
-        logging.error(f"Error generating presigned GET URL: {e}")
+        logger.error(f"Failed to generate GET presigned URL: {e}")
         return None
 
 
 def normalize_s3_key(link_file: str, prefix: str = "") -> str:
-    """
-    Normalize S3 key from raw key or full URL.
-    """
     key = link_file.strip()
 
     parsed = urlsplit(key)
@@ -63,24 +136,21 @@ def normalize_s3_key(link_file: str, prefix: str = "") -> str:
 
 
 def delete_file(bucket_name: str, link_file: str) -> bool:
-    """
-    Delete file from S3 bucket.
-    """
     if not bucket_name or not link_file:
-        logging.error("Delete failed: missing bucket name or file key")
+        logger.error("Delete failed: missing bucket name or file key")
         return False
 
+    client = _get_s3_client()
     key = normalize_s3_key(link_file)
 
     if not key:
-        logging.error("Delete failed: empty S3 key after normalization")
+        logger.error("Delete failed: empty S3 key after normalization")
         return False
 
     try:
         client.delete_object(Bucket=bucket_name, Key=key)
-        logging.info(f"Deleted S3 object: bucket={bucket_name}, key={key}")
+        logger.info(f"Deleted S3 object: bucket={bucket_name}, key={key}")
         return True
-
     except Exception as e:
-        logging.error(f"Delete failed: {e}")
+        logger.error(f"Delete failed: {e}")
         return False

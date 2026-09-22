@@ -65,7 +65,6 @@ class TelemetryServiceClient:
         self,
         device_id: str,
         organization_slug: str,
-        space_slug: str,
         start: datetime,
         end: datetime | None = None,
         limit: int = 10000,
@@ -75,7 +74,6 @@ class TelemetryServiceClient:
 
         Args:
             device_id: The device ID to fetch data for
-            space_slug: The space slug
             start: Start timestamp (optional)
             end: End timestamp (optional)
             limit: Maximum number of records to fetch
@@ -87,7 +85,7 @@ class TelemetryServiceClient:
             RequestException: If the API call fails
         """
         endpoint = f"{self.base_url}/api/telemetry/v1/location/history"
-        params = {"device_id": device_id, "space_slug": space_slug, "limit": limit}
+        params = {"device_id": device_id, "limit": limit}
 
         if start:
             params["start"] = (
